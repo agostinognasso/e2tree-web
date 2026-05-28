@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1f40">
   <title>Methods · e2tree — Explainable Ensemble Trees</title>
   <meta name="description" content="A complete walkthrough of e2tree's methodology: co-occurrence dissimilarity, tree construction, classification, regression, validation, and local importance.">
   <link rel="icon" type="image/png" href="images/e2tree_logo.png">
@@ -61,7 +62,7 @@
           <em class="italic-display" style="font-weight:400">transparent rules</em>.
         </h1>
         <p class="lede mt-6 fade-in fade-in-delay-1">
-          e2tree encodes the ensemble's latent structure as a pairwise dissimilarity matrix, then reconstructs it as a single decision tree. This page walks through each algorithmic step and the statistical machinery behind the method.
+          e2tree turns the ensemble's internal structure into a pairwise dissimilarity matrix, then uses that matrix to grow a single decision tree. This page covers the math behind each step.
         </p>
       </div>
       <div style="grid-column: span 5;" class="fade-in fade-in-delay-2">
@@ -97,7 +98,7 @@
   <div class="container">
     <div class="grid grid-12" style="gap: 3rem; align-items: start;">
       <div style="grid-column: span 5;" class="fade-in">
-        <span class="kicker">§ I · Dissimilarity</span>
+        <span class="kicker">Dissimilarity</span>
         <h2 class="display-md mt-4">
           Encoding the ensemble in a <em class="italic-display" style="font-weight:400">single matrix</em>.
         </h2>
@@ -105,7 +106,7 @@
           A tree-based ensemble of <em>B</em> trees assigns every observation to a terminal node in each tree. Two observations that frequently share a terminal node are, in the ensemble's view, similar. This intuition is formalised as the <strong>co-occurrence matrix O</strong>.
         </p>
 
-        <p>Each entry <span class="math-inline" id="oij-inline"></span> is the proportion of trees in which observations <em>i</em> and <em>j</em> land in the same leaf:</p>
+        <p>Each entry <span class="math-inline" id="oij-inline"></span> is a weighted co-occurrence measure. The numerator accumulates the node goodness-of-fit W<sub>t<sub>ij</sub>|b</sub> each time observations <em>i</em> and <em>j</em> share a leaf; the denominator normalises by the larger of the two marginal sums:</p>
 
         <div class="math-block" id="eq-cooccurrence"></div>
 
@@ -114,7 +115,7 @@
         <div class="math-block" id="eq-diss"></div>
 
         <p>
-          <strong>D</strong> is symmetric and non-negative with zero diagonal, taking values in [0,&nbsp;1]. It is computed by <code style="font-family:var(--font-mono);font-size:.88em;">createDisMatrix()</code> and supports optional parallelisation for large datasets.
+          For <strong>classification</strong>, W<sub>t<sub>ij</sub>|b</sub> = R<sub>t</sub> is the correct classification rate of the node where <em>i</em> and <em>j</em> meet in tree <em>b</em> (proportion of correctly classified training observations in that node). <strong>D</strong> is symmetric, non-negative, with zero diagonal, and values in [0,&nbsp;1]. Computed by <code style="font-family:var(--font-mono);font-size:.88em;">createDisMatrix()</code>, with optional parallelisation.
         </p>
       </div>
 
@@ -143,7 +144,7 @@
         </figure>
       </div>
       <div style="grid-column: span 5;" class="fade-in fade-in-delay-1">
-        <span class="kicker">§ II · Tree construction</span>
+        <span class="kicker">Tree construction</span>
         <h2 class="display-md mt-4">
           Growing the <em class="italic-display" style="font-weight:400">explainable tree</em>.
         </h2>
@@ -171,7 +172,7 @@
 <section style="background: var(--paper-warm);">
   <div class="container">
     <div class="mb-10">
-      <span class="kicker fade-in">§ III · Classification</span>
+      <span class="kicker fade-in">Classification</span>
       <h2 class="display-md mt-4 fade-in" style="max-width: 22em;">
         Any labelled dataset &mdash; <em class="italic-display" style="font-weight:400">any ensemble</em>.
       </h2>
@@ -183,7 +184,7 @@
           In the classification setting, the response variable is a factor. e2tree computes the dissimilarity matrix from the ensemble's proximity (co-occurrence in terminal nodes), then fits a tree whose leaf predictions are the majority class within each node.
         </p>
         <p>
-          Terminal node purity &mdash; the proportion of observations belonging to the predicted class &mdash; provides a local measure of classification confidence. The tree recovers decision rules that are immediately interpretable by domain experts.
+          Terminal node purity &mdash; the proportion of observations belonging to the predicted class &mdash; provides a local measure of classification confidence. The tree produces decision rules domain experts can read directly.
         </p>
         <p>
           Leaf node prediction for a new observation follows the standard CART convention: route the observation through the split rules to a terminal node; the prediction is the majority class of the training observations in that node, weighted by the ensemble's dissimilarity structure.
@@ -229,7 +230,7 @@
 <section>
   <div class="container">
     <div class="mb-10">
-      <span class="kicker fade-in">§ IV · Regression</span>
+      <span class="kicker fade-in">Regression</span>
       <h2 class="display-md mt-4 fade-in" style="max-width: 22em;">
         Continuous targets, <em class="italic-display" style="font-weight:400">same transparent logic</em>.
       </h2>
@@ -238,15 +239,15 @@
     <div class="grid grid-12" style="gap: 3rem; align-items: start;">
       <div style="grid-column: span 5;" class="fade-in">
         <p>
-          Extending e2tree to regression required adapting the dissimilarity definition. For continuous responses, the co-occurrence weight is modulated by the similarity of response values between observation pairs, so the dissimilarity matrix encodes not just topological proximity (same leaf) but also predictive proximity (similar target values).
+          Extending e2tree to regression required redefining the goodness-of-fit weight W. The co-occurrence formula has the same structure as the classification case, but the weight now uses the normalised mean squared error (NMSE) at the node: nodes where the ensemble predicts poorly contribute less to the co-occurrence of their observations.
         </p>
 
-        <p>Formally, the weighted co-occurrence entry becomes:</p>
+        <p>Formally, the regression weight is defined as:</p>
 
         <div class="math-block" id="eq-reg-coo"></div>
 
         <p>
-          where <span class="math-inline" id="sim-inline"></span> is a response-similarity kernel (e.g. Gaussian). This ensures that two observations sharing a leaf in a tree only contribute to co-occurrence if their response values are also similar — a critical adjustment for regression contexts.
+          where <span class="math-inline" id="sim-inline"></span>, <em>p(t)</em> = n(t)/N is the proportion of observations in node <em>t</em>, and MSE<sub>max</sub> is the theoretical maximum MSE under the Jacobson bound. Two observations sharing a leaf only count toward co-occurrence to the extent that the ensemble predicts accurately in that node.
         </p>
         <p>
           The extension is fully described in the 2026 paper in <em>Applied Stochastic Models in Business and Industry</em>. The R implementation follows the same workflow as the classification case.
@@ -302,12 +303,12 @@ tree_reg &lt;- <span class="fn">e2tree</span>(
 
       <!-- eValidation -->
       <div class="fade-in">
-        <span class="kicker">§ V · Validation</span>
+        <span class="kicker">Validation</span>
         <h2 class="display-sm mt-4">
           <em class="italic-display" style="font-weight:400">eValidation</em> — structural fidelity.
         </h2>
         <p class="mt-4">
-          <code style="font-family:var(--font-mono);font-size:.88em;">eValidation()</code> quantifies how faithfully the e2tree reproduces the ensemble's proximity structure. It computes concordance between the ensemble's co-occurrence matrix <strong>O</strong> and the tree-induced proximity matrix, returning fidelity metrics and a proximity heatmap.
+          <code style="font-family:var(--font-mono);font-size:.88em;">eValidation()</code> measures how closely the e2tree's proximity structure matches the original ensemble's. It computes concordance between <strong>O</strong> and the tree's own proximity matrix, returning a numeric score and a heatmap.
         </p>
         <ul style="list-style:none; padding:0; color: var(--ink-soft);">
           <li style="padding:.45rem 0; border-top:1px solid var(--rule-soft);">· <code style="font-family:var(--font-mono);font-size:.88em;">measures()</code> — quantitative concordance metrics</li>
@@ -324,12 +325,12 @@ tree_reg &lt;- <span class="fn">e2tree</span>(
 
       <!-- LOI -->
       <div class="fade-in fade-in-delay-1">
-        <span class="kicker">§ VI · Local importance</span>
+        <span class="kicker">Local importance</span>
         <h2 class="display-sm mt-4">
           <em class="italic-display" style="font-weight:400">loi</em> — per-observation explanations.
         </h2>
         <p class="mt-4">
-          While <code style="font-family:var(--font-mono);font-size:.88em;">vimp()</code> summarises the overall contribution of each predictor, <strong>Local Observation Importance</strong> (<code style="font-family:var(--font-mono);font-size:.88em;">loi()</code>) attributes importance at the individual observation level, enabling instance-level explanations aligned with XAI best practices.
+          While <code style="font-family:var(--font-mono);font-size:.88em;">vimp()</code> summarises the overall contribution of each predictor, <strong>Local Observation Importance</strong> (<code style="font-family:var(--font-mono);font-size:.88em;">loi()</code>) attributes importance at the individual observation level &mdash; so you can explain why the model reached a specific conclusion for a specific case.
         </p>
 
         <p>The local importance score for observation <span class="math-inline" id="loi-i"></span> and variable <span class="math-inline" id="loi-j"></span> is defined as:</p>
@@ -360,7 +361,7 @@ tree_reg &lt;- <span class="fn">e2tree</span>(
     <h2 class="display-md fade-in">
       Ready to <em class="italic-display" style="font-weight:400">explain</em> your ensemble?
     </h2>
-    <p class="lede mt-4 fade-in fade-in-delay-1">Install e2tree from CRAN and produce your first explainable tree in minutes.</p>
+    <p class="lede mt-4 fade-in fade-in-delay-1">Install from CRAN and run the five-step workflow in a few minutes.</p>
     <div class="flex gap-4 justify-center mt-8 fade-in fade-in-delay-2" style="flex-wrap: wrap;">
       <a href="documentation.html#install" class="btn btn-primary">
         Install now
@@ -418,17 +419,32 @@ tree_reg &lt;- <span class="fn">e2tree</span>(
 <script>
 // Render KaTeX equations
 const mathMap = {
-  'oij-inline':       String.raw`o_{ij} \in [0,1]`,
-  'eq-cooccurrence':  String.raw`o_{ij} = \frac{1}{B}\sum_{b=1}^{B}\mathbf{1}\!\left[l_b(i) = l_b(j)\right]`,
-  'eq-diss':          String.raw`\mathbf{D} = \mathbf{1} - \mathbf{O}`,
-  'eq-split':         String.raw`\Delta\mathrm{Imp} = \mathrm{Imp}(\text{node}) - \!\left[\frac{n_L}{n}\,\mathrm{Imp}(L) + \frac{n_R}{n}\,\mathrm{Imp}(R)\right]`,
-  'imp-inline':       String.raw`\mathrm{Imp}(\cdot)`,
-  'eq-reg-coo':       String.raw`o_{ij}^{\,\mathrm{reg}} = \frac{1}{B}\sum_{b=1}^{B}\mathbf{1}\!\left[l_b(i)=l_b(j)\right]\cdot s(y_i,\,y_j)`,
-  'sim-inline':       String.raw`s(y_i, y_j)`,
-  'loi-i':            String.raw`i`,
-  'loi-j':            String.raw`j`,
-  'eq-loi':           String.raw`\mathrm{LOI}(i,j) = \mathrm{Imp}_j\!\left(\text{node}(i)\right) - \mathrm{Imp}_{-j}\!\left(\text{node}(i)\right)`,
-  'loi-desc':         String.raw`\mathrm{Imp}_{-j}`,
+  // inline label
+  'oij-inline': String.raw`O_{ij} \in [0,1]`,
+
+  // Classification co-occurrence (Aria et al. 2024, Comp. Stat., eq. p.8)
+  'eq-cooccurrence': String.raw`O_{ij} = \frac{\displaystyle\sum_{b=1}^{B} I(u_i \wedge u_j)\cdot W_{t_{ij}|b}}{\max\!\left(\displaystyle\sum_b u_i\,W_{t_i|b},\;\displaystyle\sum_b u_j\,W_{t_j|b}\right)}, \quad 0 \le O_{ij} \le 1`,
+
+  // Dissimilarity
+  'eq-diss': String.raw`\mathbf{D} = \mathbf{1} - \mathbf{O}`,
+
+  // Split criterion (Aria et al. 2024, eq. p.9)
+  'eq-split': String.raw`\Delta\bar{d}_{t|s} = \bar{d}_t - \left[\left(\bar{d}_{t_L}\cdot p_{t_L} + \bar{d}_{t_R}\cdot p_{t_R}\right)\Big|s\right]`,
+
+  // Impurity inline
+  'imp-inline': String.raw`\bar{d}_t = \sum_i\sum_j \dfrac{d_{ij}}{n_t(n_t-1)}`,
+
+  // Regression W weight (Aria et al. 2026, ASMBI, eq.1 p.4)
+  'eq-reg-coo': String.raw`W_{(t)_{ij}|b} = \begin{cases} 0 & \text{if } 1 - NMSE_{(t)_{ij}|b} \le 0 \\ 1 - NMSE_{(t)_{ij}|b} & \text{otherwise} \end{cases}`,
+
+  // NMSE definition inline
+  'sim-inline': String.raw`NMSE_{(t)_{ij}|b} = \dfrac{MSE_{(t)_{ij}|b}}{MSE_{\max}\cdot p(t)}`,
+
+  // LOI
+  'loi-i':    String.raw`i`,
+  'loi-j':    String.raw`j`,
+  'eq-loi':   String.raw`\mathrm{LOI}(i,j) = \mathrm{Imp}_j\!\left(\text{node}(i)\right) - \mathrm{Imp}_{-j}\!\left(\text{node}(i)\right)`,
+  'loi-desc': String.raw`\mathrm{Imp}_{-j}`,
 };
 Object.entries(mathMap).forEach(([id, tex]) => {
   const el = document.getElementById(id);

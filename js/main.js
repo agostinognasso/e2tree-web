@@ -74,20 +74,21 @@
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
-  const CANVAS_H = 460;
-  let W, H, DPR;
+  let W, H, DPR, cW, cH;
+
+  function getCanvasH() { return window.innerWidth < 500 ? 300 : 460; }
 
   function resize() {
-    DPR = window.devicePixelRatio || 1;
-    W = canvas.offsetWidth * DPR;
-    H = CANVAS_H * DPR;
-    canvas.width = W;
-    canvas.height = H;
-    canvas.style.height = CANVAS_H + 'px';
+    DPR  = window.devicePixelRatio || 1;
+    cW   = canvas.offsetWidth;
+    cH   = getCanvasH();
+    W    = cW * DPR;
+    H    = cH * DPR;
+    canvas.width        = W;
+    canvas.height       = H;
+    canvas.style.height = cH + 'px';
     ctx.scale(DPR, DPR);
-    cW = canvas.offsetWidth; cH = CANVAS_H;
   }
-  let cW, cH;
   resize();
   window.addEventListener('resize', () => { ctx.setTransform(1,0,0,1,0,0); resize(); renderCurrent(); });
 
@@ -148,10 +149,12 @@
   function nodePos(n) {
     return { x: n.xf * cW, y: n.yf * cH };
   }
+  function nodeScale() { return Math.min(cW / 780, 1); }
   function nodeSize(n) {
+    const s = nodeScale();
     return n.type === 'split'
-      ? { w: 110, h: 44, r: 8 }
-      : { w: 100, h: 40, r: 20 };
+      ? { w: Math.max(72, 110 * s), h: Math.max(30, 44 * s), r: Math.max(5, 8 * s) }
+      : { w: Math.max(66, 100 * s), h: Math.max(28, 40 * s), r: Math.max(14, 20 * s) };
   }
   function nodeColors(n) {
     if (n.type === 'split') return { fill: C.nodeInternal, stroke: C.nodeInternalStroke };
@@ -354,13 +357,16 @@
     ctx.stroke();
     ctx.shadowBlur = 0;
 
+    const fs = Math.min(cW / 780, 1);
     ctx.fillStyle = n.type === 'split' ? C.textMain : C.textLeaf;
     ctx.textAlign = 'center';
-    ctx.font = `700 9.5px "Instrument Sans", sans-serif`;
-    ctx.fillText(n.line1, p.x, p.y - 5);
-    ctx.font = n.type === 'split' ? `400 8.5px "JetBrains Mono", monospace` : `400 7.5px "Instrument Sans", sans-serif`;
+    ctx.font = `700 ${Math.max(6.5, 9.5 * fs)}px "Instrument Sans", sans-serif`;
+    ctx.fillText(n.line1, p.x, p.y - 5 * fs);
+    ctx.font = n.type === 'split'
+      ? `400 ${Math.max(5.5, 8.5 * fs)}px "JetBrains Mono", monospace`
+      : `400 ${Math.max(5.5, 7.5 * fs)}px "Instrument Sans", sans-serif`;
     ctx.fillStyle = n.type === 'split' ? C.textSub : (n.risk === 'low' ? '#aaf5cc' : n.risk === 'high' ? '#ffb0a0' : '#ffd898');
-    ctx.fillText(n.line2, p.x, p.y + 8);
+    ctx.fillText(n.line2, p.x, p.y + 8 * fs);
 
     ctx.restore();
     ctx.globalAlpha = 1;

@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1f40">
   <title>Use Cases · e2tree — Explainable Ensemble Trees in Practice</title>
   <meta name="description" content="Three real-world use cases showing how e2tree turns opaque ensemble models into auditable decision rules — medical diagnosis, credit scoring, and predictive maintenance.">
   <link rel="icon" type="image/png" href="images/e2tree_logo.png">
@@ -110,7 +111,7 @@
       <em class="italic-display" style="font-weight:400">is not enough</em>.
     </h1>
     <p class="lede mt-6 fade-in fade-in-delay-1" style="max-width: 42em;">
-      A cardiologist can't act on a probability score. A credit officer can't sign off on a decision they can't explain. An engineer can't trust a maintenance alert they can't trace. e2tree bridges the gap &mdash; three case studies, step by step.
+      Ensemble models are often accurate enough to deploy but too opaque to act on. Three case studies &mdash; medical, financial, industrial &mdash; where that gap had real consequences.
     </p>
   </div>
 </section>
@@ -515,7 +516,7 @@ local_imp &lt;- <span class="fn">loi</span>(tree, ensemble, heart_train, <span c
             <div class="ann-body">
               <div class="ann-rule">Moderate Risk leaf (61%) — the grey zone</div>
               <h4>Where the ensemble is least certain: investigate further</h4>
-              <p>Older patients with atypical pain but controlled cholesterol split nearly evenly across the ensemble's trees — 61% purity is the lowest leaf. The e2tree faithfully preserves this uncertainty rather than forcing a false binary. It flags precisely the cases that require additional diagnostic tests (stress ECG, imaging).</p>
+              <p>Older patients with atypical pain but controlled cholesterol split nearly evenly across the ensemble's trees — 61% purity is the lowest leaf. The e2tree preserves this uncertainty rather than forcing a binary decision &mdash; which is exactly right for borderline cases. Those are the patients who need a stress ECG, not a label.</p>
             </div>
           </div>
         </div>
@@ -1065,7 +1066,7 @@ loi_rul &lt;- <span class="fn">loi</span>(
 <!-- ================================================================ -->
 <section>
   <div class="container">
-    <span class="kicker fade-in">§ Summary · Method comparison</span>
+    <span class="kicker fade-in">Method comparison</span>
     <h2 class="display-md mt-4 fade-in" style="max-width: 18em;">
       How does e2tree compare<br>
       <em class="italic-display" style="font-weight:400">to the alternatives</em>?

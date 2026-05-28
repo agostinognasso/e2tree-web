@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1f40">
   <title>e2tree — Explainable Ensemble Trees · R package</title>
   <meta name="description" content="e2tree: an R package that distils any ensemble of decision trees into a single, interpretable tree while preserving predictive performance. Classification and regression.">
   <link rel="icon" type="image/png" href="images/e2tree_logo.png">
@@ -102,9 +103,9 @@
 <!-- ============ ABSTRACT ============ -->
 <section style="background: var(--paper-warm);">
   <div class="container-narrow">
-    <span class="kicker fade-in">§&nbsp;Abstract</span>
+    <span class="kicker fade-in">Abstract</span>
     <h2 class="display-md fade-in mt-4">
-      Ensemble accuracy with <em class="italic-display" style="font-weight:400">single-tree</em> transparency.
+      Ensemble accuracy. <em class="italic-display" style="font-weight:400">Single-tree</em> transparency.
     </h2>
     <div class="grid grid-2 mt-8" style="gap: clamp(1.5rem, 3vw, 3rem);">
       <div class="fade-in">
@@ -112,12 +113,12 @@
           Ensemble methods based on decision trees routinely outperform single decision trees, but at the cost of interpretability: hundreds of learners whose joint reasoning is opaque to practitioners and regulators alike.
         </p>
         <p>
-          e2tree resolves this tension. The algorithm derives a co-occurrence matrix from the ensemble &mdash; capturing how frequently any two observations share a terminal node across all trees &mdash; then uses this dissimilarity structure to grow a single tree that best summarises the ensemble's behaviour.
+          e2tree resolves this by deriving a co-occurrence matrix from the ensemble &mdash; how often any two observations share a terminal node across all trees &mdash; then using that dissimilarity structure to grow a single tree that summarises the ensemble's behaviour.
         </p>
       </div>
       <div class="fade-in fade-in-delay-1">
         <p>
-          The result is a full-fidelity surrogate: a concise decision tree whose split rules, variable importances, and local interpretations faithfully reproduce what the ensemble learned, with no sacrifice in predictive performance.
+          The result is a concise decision tree whose split rules, variable importances, and local interpretations faithfully reproduce what the ensemble learned &mdash; with no drop in predictive performance.
         </p>
         <p>
           The framework supports both <em>classification</em> and <em>regression</em> tasks, integrates with <code style="font-family:var(--font-mono);font-size:.9em;background:var(--e2-soft);padding:.1em .4em;border-radius:4px;">randomForest</code> and <code style="font-family:var(--font-mono);font-size:.9em;background:var(--e2-soft);padding:.1em .4em;border-radius:4px;">ranger</code>, and is fully open-source on CRAN under the MIT license.
@@ -139,7 +140,7 @@
   <div class="container">
     <div class="flex justify-between items-start mb-8" style="flex-wrap: wrap; gap: 1.5rem;">
       <div class="fade-in" style="max-width: 36em;">
-        <span class="kicker">§ 1 · The core idea</span>
+        <span class="kicker">The core idea</span>
         <h2 class="display-md mt-4">
           From 500 trees to<br>
           <em class="italic-display" style="font-weight:400">one decision you can explain</em>.
@@ -184,12 +185,12 @@
   <div class="container">
     <div class="grid grid-12" style="gap: 3rem;">
       <div style="grid-column: span 5;" class="fade-in">
-        <span class="kicker">§ 2 · Workflow</span>
+        <span class="kicker">Workflow</span>
         <h2 class="display-md mt-4">
           From raw data to <em class="italic-display" style="font-weight:400">interpretable rules</em> in six steps.
         </h2>
         <p class="mt-6">
-          The e2tree pipeline is concise and composable. Each function corresponds to a single, transparent step; intermediate objects are inspectable and exportable at every stage.
+          Each function maps to one step. Every intermediate object is inspectable and exportable.
         </p>
         <a href="documentation.html" class="btn btn-primary mt-6">
           Full documentation
@@ -203,7 +204,7 @@
             <div class="step-badge">01</div>
             <div>
               <div class="step-title">Train a tree-based ensemble</div>
-              <p class="step-desc">Use <code style="font-family:var(--font-mono);font-size:.88em;">randomForest()</code> or <code style="font-family:var(--font-mono);font-size:.88em;">ranger()</code> to train an ensemble of decision trees. Any standard training configuration is supported; no special setup required.</p>
+              <p class="step-desc">Use <code style="font-family:var(--font-mono);font-size:.88em;">randomForest()</code> or <code style="font-family:var(--font-mono);font-size:.88em;">ranger()</code>. Any standard training configuration works.</p>
             </div>
           </li>
           <li class="step-item">
@@ -217,7 +218,7 @@
             <div class="step-badge">03</div>
             <div>
               <div class="step-title">Build the explainable tree</div>
-              <p class="step-desc"><code style="font-family:var(--font-mono);font-size:.88em;">e2tree()</code> grows a single decision tree guided by the dissimilarity structure. Stopping rules (depth, impurity, node size) are fully configurable via the <code style="font-family:var(--font-mono);font-size:.88em;">setting</code> argument.</p>
+              <p class="step-desc"><code style="font-family:var(--font-mono);font-size:.88em;">e2tree()</code> grows the single tree guided by the dissimilarity structure. Depth, impurity threshold, and node size are controlled via the <code style="font-family:var(--font-mono);font-size:.88em;">setting</code> list.</p>
             </div>
           </li>
           <li class="step-item">
@@ -231,7 +232,7 @@
             <div class="step-badge">05</div>
             <div>
               <div class="step-title">Predict and validate</div>
-              <p class="step-desc"><code style="font-family:var(--font-mono);font-size:.88em;">predict()</code> routes new observations through the e2tree's rules. <code style="font-family:var(--font-mono);font-size:.88em;">eValidation()</code> quantifies how faithfully the tree reproduces the ensemble's proximity structure.</p>
+              <p class="step-desc"><code style="font-family:var(--font-mono);font-size:.88em;">predict()</code> routes new observations through the split rules. <code style="font-family:var(--font-mono);font-size:.88em;">eValidation()</code> checks how closely the tree matches the ensemble's proximity structure.</p>
             </div>
           </li>
           <li class="step-item">
@@ -252,12 +253,12 @@
   <div class="container">
     <div class="grid grid-12" style="gap: 3rem; align-items: start;">
       <div style="grid-column: span 5;" class="fade-in">
-        <span class="kicker">§ 3 · Quick start</span>
+        <span class="kicker">Quick start</span>
         <h2 class="display-md mt-4">
           Five lines from <em class="italic-display" style="font-weight:400">ensemble</em> to tree.
         </h2>
         <p class="mt-6">
-          The complete e2tree workflow is concise by design. Install from CRAN and produce your first explainable tree in minutes.
+          Five steps from raw data to an interpretable tree. Install from CRAN and run it today.
         </p>
         <div class="flex gap-3 mt-6" style="flex-wrap: wrap;">
           <a href="documentation.html" class="btn btn-primary">
@@ -313,7 +314,7 @@ pred &lt;- <span class="fn">predict</span>(tree, newdata = validation)</div>
 <section style="background: var(--paper-warm);">
   <div class="container">
     <div class="mb-10">
-      <span class="kicker fade-in">§ 4 · Capabilities</span>
+      <span class="kicker fade-in">Capabilities</span>
       <h2 class="display-md mt-4 fade-in" style="max-width: 18em;">A complete suite for explainable ensemble analysis.</h2>
     </div>
 
@@ -321,7 +322,7 @@ pred &lt;- <span class="fn">predict</span>(tree, newdata = validation)</div>
       <div class="card fade-in">
         <div class="module-num" style="display:inline-block; margin-bottom: .75rem;">01</div>
         <h3 class="module-title" style="font-size:1.05rem; margin-bottom:.5rem;">Classification &amp; Regression</h3>
-        <p class="module-desc">Full support for both supervised learning tasks. The same workflow &mdash; dissimilarity matrix, tree growth, validation &mdash; applies identically to factor and continuous response variables.</p>
+        <p class="module-desc">Works for both classification (factor response) and regression (continuous response). The workflow is the same in both cases.</p>
         <div class="module-tags mt-4">
           <span class="pill">randomForest</span>
           <span class="pill">ranger</span>
@@ -332,7 +333,7 @@ pred &lt;- <span class="fn">predict</span>(tree, newdata = validation)</div>
       <div class="card fade-in fade-in-delay-1">
         <div class="module-num" style="display:inline-block; margin-bottom: .75rem;">02</div>
         <h3 class="module-title" style="font-size:1.05rem; margin-bottom:.5rem;">Structural Validation</h3>
-        <p class="module-desc"><code style="font-family:var(--font-mono);font-size:.88em;">eValidation()</code> measures how faithfully the e2tree reproduces the ensemble's proximity structure, providing quantitative fidelity metrics and proximity heatmaps.</p>
+        <p class="module-desc"><code style="font-family:var(--font-mono);font-size:.88em;">eValidation()</code> measures how closely the e2tree matches the ensemble's proximity structure. It returns concordance metrics and a proximity heatmap.</p>
         <div class="module-tags mt-4">
           <span class="pill">proximity</span>
           <span class="pill">fidelity metrics</span>
@@ -353,7 +354,7 @@ pred &lt;- <span class="fn">predict</span>(tree, newdata = validation)</div>
       <div class="card fade-in fade-in-delay-1">
         <div class="module-num" style="display:inline-block; margin-bottom: .75rem;">04</div>
         <h3 class="module-title" style="font-size:1.05rem; margin-bottom:.5rem;">Rich Interoperability</h3>
-        <p class="module-desc">e2tree objects can be converted to <code style="font-family:var(--font-mono);font-size:.88em;">rpart</code> format for use with <em>rpart.plot</em>, or to <em>partykit</em>'s <code style="font-family:var(--font-mono);font-size:.88em;">constparty</code> format &mdash; enabling the full R tree visualization ecosystem.</p>
+        <p class="module-desc">e2tree objects convert to <code style="font-family:var(--font-mono);font-size:.88em;">rpart</code> format (for <em>rpart.plot</em>) or to <em>partykit</em>'s <code style="font-family:var(--font-mono);font-size:.88em;">constparty</code> format. Both give access to the standard R tree visualization tools.</p>
         <div class="module-tags mt-4">
           <span class="pill">as.rpart()</span>
           <span class="pill">as.party()</span>
@@ -375,12 +376,12 @@ pred &lt;- <span class="fn">predict</span>(tree, newdata = validation)</div>
 <!-- ============ PAPER ============ -->
 <section id="paper">
   <div class="container-narrow">
-    <span class="kicker fade-in">§ 5 · Publications</span>
+    <span class="kicker fade-in">Publications</span>
     <h2 class="display-md mt-4 fade-in">
       Peer-reviewed <em class="italic-display" style="font-weight:400">methodology</em>.
     </h2>
     <p class="lede mt-4 fade-in fade-in-delay-1">
-      The e2tree algorithm is grounded in two peer-reviewed publications covering classification and regression contexts.
+      Two peer-reviewed papers describe the method &mdash; one for classification, one for regression.
     </p>
 
     <div class="grid" style="gap: 1rem; margin-top: 2.5rem;">
