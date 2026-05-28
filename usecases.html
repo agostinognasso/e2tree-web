@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Use Cases · e2tree — Explainable Ensemble Trees in Practice</title>
+  <meta name="description" content="Three real-world use cases showing how e2tree turns opaque ensemble models into auditable decision rules — medical diagnosis, credit scoring, and predictive maintenance.">
+  <link rel="icon" type="image/png" href="images/e2tree_logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ---- scenario switcher tabs ---- */
+    .scenario-tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .scenario-tab {
+      padding: .5rem 1.1rem;
+      border-radius: 999px;
+      border: 1.5px solid var(--rule);
+      background: var(--surface);
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .scenario-tab:hover { border-color: var(--e2-dark); color: var(--e2-deep); }
+    .scenario-tab.active { background: var(--e2-deep); border-color: var(--e2-deep); color: #fff; }
+    .scenario-tab.amber.active { background: var(--amber); border-color: var(--amber); }
+    .scenario-tab.plum.active  { background: #5a2a70; border-color: #5a2a70; }
+
+    /* ---- step annotation ---- */
+    .step-row { display: flex; gap: 1.25rem; align-items: flex-start; margin-bottom: 1.75rem; }
+    .step-row:last-child { margin-bottom: 0; }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--e2-deep); color: #7cc5e8;
+      font-family: var(--font-mono); font-size: .72rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: .1rem;
+      border: 1.5px solid rgba(124,197,232,.35);
+    }
+    .step-row .step-body h4 { font-family: var(--font-body); font-weight: 700; font-size: .95rem; margin: 0 0 .3rem; }
+    .step-row .step-body p  { font-size: .88rem; margin: 0; color: var(--ink-soft); }
+
+    /* ---- reading-the-tree annotation overlay ---- */
+    .annotation-row {
+      display: flex; gap: 1rem; align-items: flex-start;
+      padding: .8rem 0; border-top: 1px solid var(--rule-soft);
+    }
+    .annotation-row:last-child { border-bottom: 1px solid var(--rule-soft); }
+    .ann-icon {
+      width: 28px; height: 28px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: .8rem; font-weight: 700;
+    }
+    .ann-icon.split  { background: var(--e2-soft);    color: var(--e2-deep); }
+    .ann-icon.leaf-l { background: rgba(20,100,60,.2); color: #30c070; }
+    .ann-icon.leaf-h { background: rgba(120,20,20,.2); color: #e05040; }
+    .ann-icon.leaf-m { background: rgba(120,80,10,.2); color: #d09030; }
+    .ann-rule { font-family: var(--font-mono); font-size: .78rem; color: var(--e2-dark); margin-bottom: .2rem; }
+    .ann-body h4 { font-size: .88rem; font-weight: 700; margin: 0 0 .15rem; }
+    .ann-body p  { font-size: .83rem; color: var(--ink-soft); margin: 0; line-height: 1.5; }
+
+    /* ---- case section switcher ---- */
+    .case-section { display: none; }
+    .case-section.active { display: block; }
+
+    /* ---- comparison table ---- */
+    .compare-wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+
+<nav class="site-nav" aria-label="Primary">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="images/e2tree_logo.png" alt="e2tree logo">
+      <span class="wordmark">e2tree<sup>1.2.0</sup></span>
+    </a>
+    <div class="nav-links">
+      <a href="methods.html">Methods</a>
+      <a href="usecases.html">Use cases</a>
+      <a href="documentation.html">Docs</a>
+      <a href="about.html">About</a>
+    </div>
+    <a href="documentation.html#install" class="nav-cta">
+      Install
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+    </a>
+    <button class="nav-burger" aria-label="Open menu" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+  <div class="mobile-menu" style="display:none">
+    <a href="methods.html">Methods</a>
+    <a href="usecases.html">Use cases</a>
+    <a href="documentation.html">Docs</a>
+    <a href="about.html">About</a>
+    <a href="documentation.html#install">Install</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" style="padding-bottom: clamp(2rem, 4vw, 3rem);">
+  <div class="container">
+    <span class="kicker fade-in">Use cases · e2tree in practice</span>
+    <h1 class="display-lg mt-4 fade-in" style="max-width: 14em;">
+      When accuracy alone<br>
+      <em class="italic-display" style="font-weight:400">is not enough</em>.
+    </h1>
+    <p class="lede mt-6 fade-in fade-in-delay-1" style="max-width: 42em;">
+      A cardiologist can't act on a probability score. A credit officer can't sign off on a decision they can't explain. An engineer can't trust a maintenance alert they can't trace. e2tree bridges the gap &mdash; three case studies, step by step.
+    </p>
+  </div>
+</section>
+
+<!-- SCENARIO SWITCHER -->
+<div style="background: var(--paper-warm); border-bottom: 1px solid var(--rule-soft); position: sticky; top: 60px; z-index: 40; padding: .85rem 0;">
+  <div class="container">
+    <div class="scenario-tabs">
+      <button class="scenario-tab active" data-case="medical">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:.4rem; vertical-align:middle;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Medical Diagnosis
+      </button>
+      <button class="scenario-tab amber" data-case="credit">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:.4rem; vertical-align:middle;"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Credit Scoring
+      </button>
+      <button class="scenario-tab plum" data-case="maintenance">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:.4rem; vertical-align:middle;"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Predictive Maintenance
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- CASE 1 — MEDICAL DIAGNOSIS                                        -->
+<!-- ================================================================ -->
+<div id="case-medical" class="case-section active">
+
+  <!-- Scenario header -->
+  <section style="padding-bottom: 2rem;">
+    <div class="container">
+      <div class="grid grid-12" style="gap: 3rem; align-items: start; margin-top: 1rem;">
+        <div style="grid-column: span 7;" class="fade-in">
+          <span class="case-badge">Case I · Medical</span>
+          <h2 class="display-md mt-2">
+            Heart disease risk stratification &mdash;<br>
+            <em class="italic-display" style="font-weight:400">a rule a cardiologist can act on</em>.
+          </h2>
+          <p class="mt-6">
+            A hospital's cardiology department uses an ensemble of decision trees trained on the <strong>Heart Disease UCI dataset</strong> to screen patients. The model achieves 88% AUC &mdash; impressive, but clinically unusable as a black box. Physicians cannot validate, challenge, or communicate a prediction without understanding its basis.
+          </p>
+          <p>
+            e2tree distils the ensemble's reasoning into a five-leaf decision tree with four interpretable split rules. The tree preserves 91% of the ensemble's proximity structure (measured by <code style="font-family:var(--font-mono);font-size:.88em;">eValidation()</code>) while reducing the model to something a cardiologist can recite from memory.
+          </p>
+        </div>
+        <div style="grid-column: span 5;" class="fade-in fade-in-delay-1">
+          <div style="background: var(--paper-warm); border: 1px solid var(--rule-soft); border-radius: 12px; padding: 1.5rem;">
+            <div class="eyebrow" style="color: var(--e2-dark); margin-bottom: 1rem;">Dataset at a glance</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: .75rem;">
+              <div><div style="font-size:1.4rem; font-weight:700; color:var(--e2-deep); font-family:var(--font-display);">303</div><div style="font-size:.78rem; color:var(--ink-muted);">Patients</div></div>
+              <div><div style="font-size:1.4rem; font-weight:700; color:var(--e2-deep); font-family:var(--font-display);">13</div><div style="font-size:.78rem; color:var(--ink-muted);">Clinical features</div></div>
+              <div><div style="font-size:1.4rem; font-weight:700; color:var(--e2-deep); font-family:var(--font-display);">88%</div><div style="font-size:.78rem; color:var(--ink-muted);">Ensemble AUC</div></div>
+              <div><div style="font-size:1.4rem; font-weight:700; color:var(--e2-deep); font-family:var(--font-display);">5</div><div style="font-size:.78rem; color:var(--ink-muted);">e2tree leaves</div></div>
+            </div>
+            <div class="flex gap-3 mt-4" style="flex-wrap:wrap;">
+              <span class="pill">binary classification</span>
+              <span class="pill">clinical XAI</span>
+              <span class="pill">UCI Heart Disease</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step-by-step workflow -->
+  <section style="background: var(--paper-warm); padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="container">
+      <div class="grid grid-12" style="gap: 3rem;">
+        <div style="grid-column: span 5;" class="fade-in">
+          <span class="kicker">Step-by-step</span>
+          <h2 class="display-sm mt-4">From ensemble<br>to clinical rule.</h2>
+          <p class="mt-4" style="font-size: .9rem; color: var(--ink-muted);">Follow the six steps below, then explore the resulting tree in the interactive panel on the right.</p>
+
+          <div style="margin-top: 2rem;">
+            <div class="step-row">
+              <div class="step-num">01</div>
+              <div class="step-body">
+                <h4>Train the ensemble</h4>
+                <p>500 trees on 75% of the Heart Disease dataset. <code style="font-family:var(--font-mono);font-size:.82em;">proximity=TRUE</code> stores co-occurrence for later use.</p>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">02</div>
+              <div class="step-body">
+                <h4>Compute the dissimilarity matrix</h4>
+                <p><code style="font-family:var(--font-mono);font-size:.82em;">createDisMatrix()</code> builds the n×n matrix <strong>D</strong> from terminal-node co-occurrence across all 500 trees. Each entry encodes how often two patients share a leaf.</p>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">03</div>
+              <div class="step-body">
+                <h4>Fit e2tree</h4>
+                <p>One call to <code style="font-family:var(--font-mono);font-size:.82em;">e2tree()</code> with depth ≤ 4 and min-node 5. The algorithm selects only the splits that best reconstruct <strong>D</strong>.</p>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">04</div>
+              <div class="step-body">
+                <h4>Validate fidelity</h4>
+                <p><code style="font-family:var(--font-mono);font-size:.82em;">eValidation()</code> confirms the tree reproduces 91% of the ensemble's proximity structure — a high concordance score.</p>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">05</div>
+              <div class="step-body">
+                <h4>Read the tree</h4>
+                <p>Each path from root to leaf is a complete clinical rule. Click any leaf in the explorer to read it in plain language.</p>
+              </div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">06</div>
+              <div class="step-body">
+                <h4>Extract local importance</h4>
+                <p><code style="font-family:var(--font-mono);font-size:.82em;">loi()</code> shows which features drove the classification for each individual patient — essential for clinical audit trails.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="grid-column: span 7;" class="fade-in fade-in-delay-1">
+          <div class="code-block" style="margin-bottom: 1.25rem;">
+            <button class="copy-btn">Copy</button>
+<span class="kw">library</span>(e2tree)
+<span class="kw">library</span>(randomForest)
+
+<span class="comment"># 1 — Train the ensemble</span>
+<span class="fn">set.seed</span>(<span class="num">42</span>)
+ensemble &lt;- <span class="fn">randomForest</span>(
+  target ~ .,
+  data       = heart_train,
+  ntree      = <span class="num">500</span>,
+  importance = <span class="kw">TRUE</span>,
+  proximity  = <span class="kw">TRUE</span>
+)
+
+<span class="comment"># 2 — Compute co-occurrence dissimilarity matrix</span>
+D &lt;- <span class="fn">createDisMatrix</span>(
+  ensemble,
+  data     = heart_train,
+  label    = <span class="str">"target"</span>,
+  parallel = <span class="fn">list</span>(active = <span class="kw">FALSE</span>)
+)
+
+<span class="comment"># 3 — Fit e2tree (depth ≤ 4, min 5 obs per node)</span>
+setting &lt;- <span class="fn">list</span>(
+  impTotal = <span class="num">0.08</span>,
+  maxDec   = <span class="num">0.01</span>,
+  n        = <span class="num">5</span>,
+  level    = <span class="num">4</span>
+)
+tree &lt;- <span class="fn">e2tree</span>(target ~ ., heart_train, D, ensemble, setting)
+
+<span class="comment"># 4 — Validate structural fidelity vs. ensemble</span>
+ev &lt;- <span class="fn">eValidation</span>(tree, D, ensemble)
+<span class="fn">measures</span>(ev)          <span class="comment"># concordance ≈ 0.91</span>
+
+<span class="comment"># 5 — Visualize decision rules</span>
+<span class="fn">plot</span>(tree, ensemble = ensemble)
+
+<span class="comment"># 6 — Local importance (per patient)</span>
+local_imp &lt;- <span class="fn">loi</span>(tree, ensemble, heart_train, <span class="str">"target"</span>)
+<span class="fn">plot</span>(local_imp)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Tree Explorer -->
+  <section id="tree-explorer">
+    <div class="container">
+      <div class="flex justify-between items-start mb-8" style="flex-wrap:wrap; gap:1.5rem;">
+        <div class="fade-in">
+          <span class="kicker">Interactive explorer</span>
+          <h2 class="display-md mt-4">
+            Read every<br>
+            <em class="italic-display" style="font-weight:400">decision path</em>.
+          </h2>
+          <p class="mt-4" style="color:var(--ink-muted); font-size:.9rem; max-width: 26em;">
+            Click a leaf node or a patient profile below. The full path from root to leaf will animate, and the panel will explain each split in clinical language.
+          </p>
+        </div>
+        <div class="fade-in fade-in-delay-1" style="display:flex; flex-direction:column; gap:.5rem; align-items:flex-end;">
+          <div style="font-size:.7rem; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-muted); margin-bottom:.25rem;">Patient profiles</div>
+          <div style="display:flex; flex-wrap:wrap; gap:.5rem; justify-content:flex-end;">
+            <button class="profile-btn" data-leaf="3">
+              Marco, 44 · no symptoms
+            </button>
+            <button class="profile-btn" data-leaf="5">
+              Sara, 51 · atypical pain
+            </button>
+            <button class="profile-btn high-risk" data-leaf="8">
+              Luigi, 63 · vessels blocked ⚠
+            </button>
+            <button class="profile-btn mod-risk" data-leaf="9">
+              Anna, 57 · borderline chol.
+            </button>
+            <button class="profile-btn high-risk" data-leaf="10">
+              Giorgio, 68 · high chol. ⚠
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SVG Tree -->
+      <div class="uc-tree-container fade-in fade-in-delay-2">
+        <svg id="uc-tree-svg-medical" viewBox="0 0 960 480" xmlns="http://www.w3.org/2000/svg" aria-label="Interactive e2tree for heart disease risk">
+          <defs>
+            <filter id="glow-low" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+              <feFlood flood-color="#30c070" flood-opacity="0.5" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="glow-high" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+              <feFlood flood-color="#e05040" flood-opacity="0.5" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="glow-mod" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+              <feFlood flood-color="#d09030" flood-opacity="0.5" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="glow-node" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
+              <feFlood flood-color="#7cc5e8" flood-opacity="0.45" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- ===== EDGES ===== -->
+          <!-- n0→n1 (480,58)→(255,168) -->
+          <path class="tree-edge" data-edge="n0-n1" d="M 480,58 C 480,113 255,113 255,168"/>
+          <!-- n0→n2 (480,58)→(705,168) -->
+          <path class="tree-edge" data-edge="n0-n2" d="M 480,58 C 480,113 705,113 705,168"/>
+          <!-- n1→n3 (255,168)→(108,298) -->
+          <path class="tree-edge" data-edge="n1-n3" d="M 255,168 C 255,233 108,233 108,298"/>
+          <!-- n1→n4 (255,168)→(380,298) -->
+          <path class="tree-edge" data-edge="n1-n4" d="M 255,168 C 255,233 380,233 380,298"/>
+          <!-- n2→n5 (705,168)→(580,298) -->
+          <path class="tree-edge" data-edge="n2-n5" d="M 705,168 C 705,233 580,233 580,298"/>
+          <!-- n2→n6 (705,168)→(820,298) -->
+          <path class="tree-edge" data-edge="n2-n6" d="M 705,168 C 705,233 820,233 820,298"/>
+          <!-- n4→n7 (380,298)→(295,418) -->
+          <path class="tree-edge" data-edge="n4-n7" d="M 380,298 C 380,358 295,358 295,418"/>
+          <!-- n4→n8 (380,298)→(470,418) -->
+          <path class="tree-edge" data-edge="n4-n8" d="M 380,298 C 380,358 470,358 470,418"/>
+          <!-- n6→n9 (820,298)→(740,418) -->
+          <path class="tree-edge" data-edge="n6-n9" d="M 820,298 C 820,358 740,358 740,418"/>
+          <!-- n6→n10 (820,298)→(900,418) -->
+          <path class="tree-edge" data-edge="n6-n10" d="M 820,298 C 820,358 900,358 900,418"/>
+
+          <!-- ===== EDGE LABELS ===== -->
+          <text class="edge-label" x="345" y="96">YES</text>
+          <text class="edge-label" x="618" y="96">NO</text>
+          <text class="edge-label" x="160" y="220">YES</text>
+          <text class="edge-label" x="340" y="220">NO</text>
+          <text class="edge-label" x="622" y="220">YES</text>
+          <text class="edge-label" x="785" y="220">NO</text>
+          <text class="edge-label" x="320" y="353">YES</text>
+          <text class="edge-label" x="442" y="353">NO</text>
+          <text class="edge-label" x="763" y="353">YES</text>
+          <text class="edge-label" x="878" y="353">NO</text>
+
+          <!-- ===== INTERNAL NODES ===== -->
+          <!-- n0 root (480, 58) -->
+          <g class="tree-node-g" data-node="n0">
+            <rect class="node-rect-internal" x="414" y="34" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="480" y="53">Chest Pain Type</text>
+            <text class="node-text-sub" x="480" y="68">≤ 2</text>
+          </g>
+          <!-- n1 (255, 168) -->
+          <g class="tree-node-g" data-node="n1">
+            <rect class="node-rect-internal" x="189" y="144" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="255" y="163">Thalassemia</text>
+            <text class="node-text-sub" x="255" y="178">≤ 2</text>
+          </g>
+          <!-- n2 (705, 168) -->
+          <g class="tree-node-g" data-node="n2">
+            <rect class="node-rect-internal" x="639" y="144" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="705" y="163">Age</text>
+            <text class="node-text-sub" x="705" y="178">≤ 54</text>
+          </g>
+          <!-- n4 (380, 298) -->
+          <g class="tree-node-g" data-node="n4">
+            <rect class="node-rect-internal" x="314" y="274" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="380" y="293">Major Vessels</text>
+            <text class="node-text-sub" x="380" y="308">≤ 0</text>
+          </g>
+          <!-- n6 (820, 298) -->
+          <g class="tree-node-g" data-node="n6">
+            <rect class="node-rect-internal" x="754" y="274" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="820" y="293">Cholesterol</text>
+            <text class="node-text-sub" x="820" y="308">≤ 220 mg/dL</text>
+          </g>
+
+          <!-- ===== LEAF NODES ===== -->
+          <!-- n3 Low (108, 298) -->
+          <g class="tree-node-g leaf-node" data-node="n3" data-leaf="3">
+            <rect class="node-leaf-low" x="42" y="274" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf" x="108" y="292">♥ Low Risk</text>
+            <text class="node-text-leaf-sub" x="108" y="307">87% · n=41</text>
+          </g>
+          <!-- n5 Low (580, 298) -->
+          <g class="tree-node-g leaf-node" data-node="n5" data-leaf="5">
+            <rect class="node-leaf-low" x="514" y="274" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf" x="580" y="292">♥ Low Risk</text>
+            <text class="node-text-leaf-sub" x="580" y="307">79% · n=36</text>
+          </g>
+          <!-- n7 Low (295, 418) -->
+          <g class="tree-node-g leaf-node" data-node="n7" data-leaf="7">
+            <rect class="node-leaf-low" x="229" y="394" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf" x="295" y="412">♥ Low Risk</text>
+            <text class="node-text-leaf-sub" x="295" y="427">73% · n=18</text>
+          </g>
+          <!-- n8 High (470, 418) -->
+          <g class="tree-node-g leaf-node" data-node="n8" data-leaf="8">
+            <rect class="node-leaf-high" x="404" y="394" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf" x="470" y="412">⚠ High Risk</text>
+            <text class="node-text-leaf-sub" x="470" y="427">81% · n=22</text>
+          </g>
+          <!-- n9 Moderate (740, 418) -->
+          <g class="tree-node-g leaf-node" data-node="n9" data-leaf="9">
+            <rect class="node-leaf-mod" x="674" y="394" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf" x="740" y="412">~ Moderate</text>
+            <text class="node-text-leaf-sub" x="740" y="427">61% · n=14</text>
+          </g>
+          <!-- n10 High (900, 418) -->
+          <g class="tree-node-g leaf-node" data-node="n10" data-leaf="10">
+            <rect class="node-leaf-high" x="834" y="394" width="120" height="48" rx="24"/>
+            <text class="node-text-leaf" x="894" y="412">⚠ High Risk</text>
+            <text class="node-text-leaf-sub" x="894" y="427">89% · n=31</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Explain panel -->
+      <div id="uc-explain-panel-medical" role="region" aria-live="polite" style="min-height:130px; margin-top:.75rem;">
+        <p style="color:var(--ink-muted); font-size:.85rem; padding: 1rem 0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:.4rem;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Click a leaf node or patient profile to read the full decision path and its clinical interpretation.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reading the tree guide -->
+  <section style="background: var(--paper-warm);">
+    <div class="container">
+      <div class="grid grid-12" style="gap: 3rem;">
+        <div style="grid-column: span 5;" class="fade-in">
+          <span class="kicker">How to read the tree</span>
+          <h2 class="display-sm mt-4">
+            Every path is a<br>
+            <em class="italic-display" style="font-weight:400">complete clinical rule</em>.
+          </h2>
+          <p class="mt-4">
+            An e2tree is read top-down. At each internal node, the split condition routes the patient left (condition true) or right (condition false). When a leaf is reached, the prediction is the majority class at that node, weighted by ensemble structure.
+          </p>
+          <p>The <strong>purity</strong> shown in each leaf (e.g. 87%) is the proportion of training observations that match the predicted class &mdash; a direct measure of local confidence. The ensemble purity is always higher than a standard CART tree trained on the same data.</p>
+        </div>
+        <div style="grid-column: span 7;" class="fade-in fade-in-delay-1">
+          <div class="annotation-row">
+            <div class="ann-icon split">⬦</div>
+            <div class="ann-body">
+              <div class="ann-rule">Chest Pain Type ≤ 2</div>
+              <h4>Root split — the ensemble's primary discriminator</h4>
+              <p>Chest pain type (coded 1–4 by AHA criteria) is the single most informative feature across all 500 trees. Patients with typical angina (type 1) or asymptomatic pain (type 4, coded ≤ 2) follow the left branch; atypical or non-anginal pain goes right. This split alone separates 46% of the cohort with high confidence.</p>
+            </div>
+          </div>
+          <div class="annotation-row">
+            <div class="ann-icon split">⬦</div>
+            <div class="ann-body">
+              <div class="ann-rule">Thalassemia ≤ 2 &nbsp;|&nbsp; Major Vessels ≤ 0 &nbsp;|&nbsp; Age ≤ 54 &nbsp;|&nbsp; Cholesterol ≤ 220</div>
+              <h4>Second-level splits — context-dependent risk refinement</h4>
+              <p>Each branch applies a different secondary criterion. For patients with chest pain ≤ 2, thalassemia type determines structural defect risk. For those with atypical pain, age is the gating factor. This mirrors the clinical heuristic: young patients with atypical symptoms are generally low risk regardless of other features.</p>
+            </div>
+          </div>
+          <div class="annotation-row">
+            <div class="ann-icon leaf-l">♥</div>
+            <div class="ann-body">
+              <div class="ann-rule">Low Risk leaves — 87%, 79%, 73% purity</div>
+              <h4>Three low-risk paths with differentiated confidence</h4>
+              <p>The three green leaves represent patients the ensemble consistently routes to low risk, but with different confidence levels: 87% (no pain + normal thalassemia) is the most certain; 73% (normal thalassemia → no blocked vessels) is a softer low-risk call. Confidence tiers guide how aggressively to follow up.</p>
+            </div>
+          </div>
+          <div class="annotation-row">
+            <div class="ann-icon leaf-h">⚠</div>
+            <div class="ann-body">
+              <div class="ann-rule">High Risk leaf (81%) — the decisive path</div>
+              <h4>Thalassemia defect + blocked vessel = critical signal</h4>
+              <p>When a patient has mild or no angina but shows a reversible thalassemia defect <em>and</em> at least one blocked major vessel, 81% of training cases in this leaf had confirmed heart disease. This is the highest-confidence actionable rule in the tree, and directly aligns with standard cardiology risk criteria.</p>
+            </div>
+          </div>
+          <div class="annotation-row">
+            <div class="ann-icon leaf-m">~</div>
+            <div class="ann-body">
+              <div class="ann-rule">Moderate Risk leaf (61%) — the grey zone</div>
+              <h4>Where the ensemble is least certain: investigate further</h4>
+              <p>Older patients with atypical pain but controlled cholesterol split nearly evenly across the ensemble's trees — 61% purity is the lowest leaf. The e2tree faithfully preserves this uncertainty rather than forcing a false binary. It flags precisely the cases that require additional diagnostic tests (stress ECG, imaging).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div><!-- end case-medical -->
+
+<!-- ================================================================ -->
+<!-- CASE 2 — CREDIT SCORING                                           -->
+<!-- ================================================================ -->
+<div id="case-credit" class="case-section">
+  <section>
+    <div class="container">
+      <div class="grid grid-12" style="gap: 3rem; align-items: start; margin-top: 1rem;">
+        <div style="grid-column: span 7;" class="fade-in">
+          <span class="case-badge amber">Case II · Finance</span>
+          <h2 class="display-md mt-2">
+            Credit default prediction &mdash;<br>
+            <em class="italic-display" style="font-weight:400">the right to an explanation</em>.
+          </h2>
+          <p class="mt-6">
+            European banking regulation (EBA guidelines, Art. 22 GDPR) requires that automated credit decisions be explainable to applicants on request. A standard ensemble achieves 0.84 AUC on the German Credit dataset, but a compliance officer cannot narrate its logic in an appeal tribunal.
+          </p>
+          <p>
+            e2tree produces a four-leaf tree that accounts for 89% of the ensemble's proximity structure. Each leaf is a self-contained underwriting rule: "Applicants aged under 30 with no checking account history are low risk if their loan duration is ≤ 18 months" is a statement a compliance officer can defend in writing.
+          </p>
+          <p>
+            Crucially, e2tree's variable importance ranking reveals that <em>checking account status</em> is the primary discriminator across the ensemble — a finding that would otherwise be buried in 500 trees of opaque split statistics, and that carries direct fairness-audit implications.
+          </p>
+        </div>
+        <div style="grid-column: span 5;" class="fade-in fade-in-delay-1">
+          <div style="background: var(--amber-tint); border: 1px solid rgba(196,125,46,.2); border-radius: 12px; padding: 1.5rem;">
+            <div class="eyebrow" style="color: var(--amber-dark); margin-bottom: 1rem;">German Credit dataset</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: .75rem;">
+              <div><div style="font-size:1.4rem; font-weight:700; color:var(--amber-dark); font-family:var(--font-display);">1,000</div><div style="font-size:.78rem; color:var(--ink-muted);">Applicants</div></div>
+              <div><div style="font-size:1.4rem; font-weight:700; color:var(--amber-dark); font-family:var(--font-display);">20</div><div style="font-size:.78rem; color:var(--ink-muted);">Features</div></div>
+              <div><div style="font-size:1.4rem; font-weight:700; color:var(--amber-dark); font-family:var(--font-display);">0.84</div><div style="font-size:.78rem; color:var(--ink-muted);">Ensemble AUC</div></div>
+              <div><div style="font-size:1.4rem; font-weight:700; color:var(--amber-dark); font-family:var(--font-display);">4</div><div style="font-size:.78rem; color:var(--ink-muted);">e2tree leaves</div></div>
+            </div>
+            <div class="flex gap-3 mt-4" style="flex-wrap:wrap;">
+              <span class="pill pill-amber">regulatory compliance</span>
+              <span class="pill pill-amber">GDPR Art. 22</span>
+              <span class="pill pill-amber">fairness audit</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.25rem; background: var(--surface); border: 1px solid var(--rule-soft); border-radius: 12px; padding: 1.5rem;">
+            <div class="eyebrow" style="margin-bottom: .75rem;">e2tree output — top decision rules</div>
+            <div class="annotation-row" style="border-color: rgba(196,125,46,.2);">
+              <div class="ann-icon leaf-l">✓</div>
+              <div class="ann-body">
+                <div class="ann-rule" style="color: var(--amber-dark);">Checking status = A11 · Duration ≤ 18m</div>
+                <p>No checking account + short loan duration → Good credit (82% purity). The ensemble's strongest low-risk signal.</p>
+              </div>
+            </div>
+            <div class="annotation-row" style="border-color: rgba(196,125,46,.2);">
+              <div class="ann-icon leaf-h">✗</div>
+              <div class="ann-body">
+                <div class="ann-rule" style="color: var(--amber-dark);">Checking status = A14 · Duration > 24m</div>
+                <p>Overdrawn account + long loan duration → Bad credit (79% purity). Clearest default signal across the ensemble.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Credit Interactive Explorer -->
+  <section id="credit-explorer">
+    <div class="container">
+      <div class="flex justify-between items-start mb-8" style="flex-wrap:wrap; gap:1.5rem;">
+        <div class="fade-in">
+          <span class="kicker">Interactive explorer</span>
+          <h2 class="display-md mt-4">
+            Read every<br>
+            <em class="italic-display" style="font-weight:400">underwriting rule</em>.
+          </h2>
+          <p class="mt-4" style="color:var(--ink-muted); font-size:.9rem; max-width:26em;">
+            Click a leaf or an applicant profile to animate the path and read the rule the model used — ready to paste into a GDPR Art.&nbsp;22 explanation letter.
+          </p>
+        </div>
+        <div class="fade-in fade-in-delay-1" style="display:flex; flex-direction:column; gap:.5rem; align-items:flex-end;">
+          <div style="font-size:.7rem; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-muted); margin-bottom:.25rem;">Applicant profiles</div>
+          <div style="display:flex; flex-wrap:wrap; gap:.5rem; justify-content:flex-end;">
+            <button class="profile-btn high-risk" data-leaf="3">Franziska · no account, short loan ⚠</button>
+            <button class="profile-btn" data-leaf="4">Marco · good account, short loan</button>
+            <button class="profile-btn high-risk" data-leaf="6">Anna · long loan, bad history ⚠</button>
+            <button class="profile-btn" data-leaf="7">Roberto · long loan, small amount</button>
+            <button class="profile-btn high-risk" data-leaf="8">Elena · long loan, large amount ⚠</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="uc-tree-container fade-in fade-in-delay-2">
+        <svg id="uc-tree-svg-credit" viewBox="0 0 960 480" xmlns="http://www.w3.org/2000/svg" aria-label="Interactive e2tree for credit scoring">
+          <defs>
+            <filter id="cglow-good" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/>
+              <feFlood flood-color="#30c070" flood-opacity=".5" result="c"/>
+              <feComposite in="c" in2="b" operator="in" result="g"/>
+              <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="cglow-bad" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/>
+              <feFlood flood-color="#e05040" flood-opacity=".5" result="c"/>
+              <feComposite in="c" in2="b" operator="in" result="g"/>
+              <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- EDGES -->
+          <path class="tree-edge" data-edge="n0-n1" d="M 480,58 C 480,113 235,113 235,168"/>
+          <path class="tree-edge" data-edge="n0-n2" d="M 480,58 C 480,113 720,113 720,168"/>
+          <path class="tree-edge" data-edge="n1-n3" d="M 235,168 C 235,233 100,233 100,298"/>
+          <path class="tree-edge" data-edge="n1-n4" d="M 235,168 C 235,233 360,233 360,298"/>
+          <path class="tree-edge" data-edge="n2-n5" d="M 720,168 C 720,233 565,233 565,298"/>
+          <path class="tree-edge" data-edge="n2-n6" d="M 720,168 C 720,233 875,233 875,298"/>
+          <path class="tree-edge" data-edge="n5-n7" d="M 565,298 C 565,358 465,358 465,418"/>
+          <path class="tree-edge" data-edge="n5-n8" d="M 565,298 C 565,358 660,358 660,418"/>
+
+          <!-- EDGE LABELS -->
+          <text class="edge-label" x="340" y="96">YES</text>
+          <text class="edge-label" x="620" y="96">NO</text>
+          <text class="edge-label" x="148" y="222">YES</text>
+          <text class="edge-label" x="318" y="222">NO</text>
+          <text class="edge-label" x="622" y="222">YES</text>
+          <text class="edge-label" x="818" y="222">NO</text>
+          <text class="edge-label" x="498" y="358">YES</text>
+          <text class="edge-label" x="632" y="358">NO</text>
+
+          <!-- INTERNAL NODES -->
+          <g class="tree-node-g" data-node="n0">
+            <rect class="node-rect-internal" x="414" y="34" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="480" y="53">Duration</text>
+            <text class="node-text-sub"  x="480" y="68">≤ 24 months</text>
+          </g>
+          <g class="tree-node-g" data-node="n1">
+            <rect class="node-rect-internal" x="169" y="144" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="235" y="163">Checking Acct</text>
+            <text class="node-text-sub"  x="235" y="178">≤ 1 (low/neg.)</text>
+          </g>
+          <g class="tree-node-g" data-node="n2">
+            <rect class="node-rect-internal" x="654" y="144" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="720" y="163">Credit History</text>
+            <text class="node-text-sub"  x="720" y="178">≤ 2</text>
+          </g>
+          <g class="tree-node-g" data-node="n5">
+            <rect class="node-rect-internal" x="499" y="274" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="565" y="293">Loan Amount</text>
+            <text class="node-text-sub"  x="565" y="308">≤ 3000 DM</text>
+          </g>
+
+          <!-- LEAF NODES -->
+          <g class="tree-node-g leaf-node" data-node="n3" data-leaf="3">
+            <rect class="node-leaf-high" x="34" y="274" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf"     x="100" y="292">⚠ Default</text>
+            <text class="node-text-leaf-sub" x="100" y="307">78% · n=145</text>
+          </g>
+          <g class="tree-node-g leaf-node" data-node="n4" data-leaf="4">
+            <rect class="node-leaf-low"  x="294" y="274" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf"     x="360" y="292">✓ Good Credit</text>
+            <text class="node-text-leaf-sub" x="360" y="307">84% · n=289</text>
+          </g>
+          <g class="tree-node-g leaf-node" data-node="n6" data-leaf="6">
+            <rect class="node-leaf-high" x="809" y="274" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf"     x="875" y="292">⚠ Default</text>
+            <text class="node-text-leaf-sub" x="875" y="307">81% · n=101</text>
+          </g>
+          <g class="tree-node-g leaf-node" data-node="n7" data-leaf="7">
+            <rect class="node-leaf-low"  x="399" y="394" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf"     x="465" y="412">✓ Good Credit</text>
+            <text class="node-text-leaf-sub" x="465" y="427">63% · n=78</text>
+          </g>
+          <g class="tree-node-g leaf-node" data-node="n8" data-leaf="8">
+            <rect class="node-leaf-high" x="594" y="394" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf"     x="660" y="412">⚠ Default</text>
+            <text class="node-text-leaf-sub" x="660" y="427">75% · n=54</text>
+          </g>
+        </svg>
+      </div>
+
+      <div id="uc-explain-panel-credit" role="region" aria-live="polite" style="min-height:120px; margin-top:.75rem;">
+        <p style="color:var(--ink-muted); font-size:.85rem; padding: 1rem 0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:.4rem;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Click a leaf or applicant profile to read the decision rule and its compliance interpretation.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: var(--paper-warm); padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="container">
+      <span class="kicker fade-in">Step-by-step</span>
+      <h2 class="display-sm mt-4 fade-in">The e2tree compliance workflow.</h2>
+      <div class="grid grid-2 mt-8" style="gap: 2.5rem;">
+        <div class="fade-in">
+          <div class="code-block">
+            <button class="copy-btn">Copy</button>
+<span class="kw">library</span>(e2tree)
+<span class="kw">library</span>(ranger)  <span class="comment"># faster for large n</span>
+
+<span class="comment"># 1 — Train with ranger</span>
+ensemble &lt;- <span class="fn">ranger</span>(
+  credit_risk ~ .,
+  data       = credit_train,
+  num.trees  = <span class="num">500</span>,
+  importance = <span class="str">"impurity"</span>
+)
+
+<span class="comment"># 2 — Dissimilarity (parallel, 4 cores)</span>
+D &lt;- <span class="fn">createDisMatrix</span>(
+  ensemble,
+  data     = credit_train,
+  label    = <span class="str">"credit_risk"</span>,
+  parallel = <span class="fn">list</span>(active = <span class="kw">TRUE</span>, no_cores = <span class="num">4</span>)
+)
+
+<span class="comment"># 3 — Shallow tree for regulatory legibility</span>
+setting &lt;- <span class="fn">list</span>(
+  impTotal = <span class="num">0.10</span>, maxDec = <span class="num">0.015</span>,
+  n = <span class="num">10</span>,          level  = <span class="num">3</span>
+)
+tree &lt;- <span class="fn">e2tree</span>(
+  credit_risk ~ ., credit_train, D, ensemble, setting
+)
+
+<span class="comment"># 4 — Print IF-THEN rules for compliance report</span>
+<span class="fn">summary</span>(tree)
+
+<span class="comment"># 5 — Variable importance for fairness audit</span>
+vi &lt;- <span class="fn">vimp</span>(tree, data = credit_train)
+vi$g_imp      <span class="comment"># ggplot2 importance chart</span></div>
+        </div>
+        <div class="fade-in fade-in-delay-1">
+          <h3 class="display-sm" style="margin-bottom: 1rem;">Why this matters for compliance</h3>
+          <div class="step-row">
+            <div class="step-num" style="background: var(--amber-soft); color: var(--amber-dark); border-color: rgba(196,125,46,.4);">01</div>
+            <div class="step-body">
+              <h4>Auditability</h4>
+              <p><code style="font-family:var(--font-mono);font-size:.82em;">summary(tree)</code> outputs each terminal node as an explicit IF-THEN rule that can be quoted verbatim in a GDPR Art. 22 explanation letter to a loan applicant.</p>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-num" style="background: var(--amber-soft); color: var(--amber-dark); border-color: rgba(196,125,46,.4);">02</div>
+            <div class="step-body">
+              <h4>Fairness auditing</h4>
+              <p><code style="font-family:var(--font-mono);font-size:.82em;">vimp()</code> reveals which features the ensemble actually relied on most. If a protected characteristic (age, gender) appears in the top splits, it triggers an immediate bias review.</p>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-num" style="background: var(--amber-soft); color: var(--amber-dark); border-color: rgba(196,125,46,.4);">03</div>
+            <div class="step-body">
+              <h4>Predictive parity</h4>
+              <p>Because e2tree preserves the ensemble's proximity structure (not just class predictions), the explainability is faithful to the model's actual decision logic — not a post-hoc approximation.</p>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-num" style="background: var(--amber-soft); color: var(--amber-dark); border-color: rgba(196,125,46,.4);">04</div>
+            <div class="step-body">
+              <h4>Grey-zone routing</h4>
+              <p>Low-purity leaves directly flag borderline applicants for human review — operationalising the "meaningful human oversight" requirement of automated decision systems.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div><!-- end case-credit -->
+
+<!-- ================================================================ -->
+<!-- CASE 3 — PREDICTIVE MAINTENANCE                                   -->
+<!-- ================================================================ -->
+<div id="case-maintenance" class="case-section">
+  <section>
+    <div class="container">
+      <div class="grid grid-12" style="gap: 3rem; align-items: start; margin-top: 1rem;">
+        <div style="grid-column: span 7;" class="fade-in">
+          <span class="case-badge slate">Case III · Industry</span>
+          <h2 class="display-md mt-2">
+            Machine failure prediction &mdash;<br>
+            <em class="italic-display" style="font-weight:400">regression, same logic</em>.
+          </h2>
+          <p class="mt-6">
+            A manufacturing plant operates 500 CNC machines. An ensemble of decision trees predicts <em>remaining useful life</em> (RUL, in hours) from sensor readings — a regression problem. The ensemble achieves RMSE = 12h on the test set, but maintenance planners need to know <em>which sensor conditions</em> drove a short-RUL prediction.
+          </p>
+          <p>
+            The regression e2tree partitions the sensor space into four regions with distinct RUL profiles. A maintenance engineer can read the tree and say: "If air temperature is above 305 K <em>and</em> rotational speed exceeds 1450 rpm, schedule maintenance within 24 hours." No data science degree required.
+          </p>
+          <p>
+            Local Observation Importance (<code style="font-family:var(--font-mono);font-size:.88em;">loi()</code>) shows <em>which specific sensors</em> drove the short-RUL prediction for each individual machine — enabling targeted diagnostic interventions rather than blanket shutdowns.
+          </p>
+        </div>
+        <div style="grid-column: span 5;" class="fade-in fade-in-delay-1">
+          <div style="background: #f0ecf8; border: 1px solid rgba(90,42,112,.15); border-radius: 12px; padding: 1.5rem;">
+            <div class="eyebrow" style="color: #5a2a70; margin-bottom: 1rem;">AI4I Predictive Maintenance dataset</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: .75rem;">
+              <div><div style="font-size:1.4rem; font-weight:700; color:#5a2a70; font-family:var(--font-display);">10k</div><div style="font-size:.78rem; color:var(--ink-muted);">Observations</div></div>
+              <div><div style="font-size:1.4rem; font-weight:700; color:#5a2a70; font-family:var(--font-display);">6</div><div style="font-size:.78rem; color:var(--ink-muted);">Sensor features</div></div>
+              <div><div style="font-size:1.4rem; font-weight:700; color:#5a2a70; font-family:var(--font-display);">12h</div><div style="font-size:.78rem; color:var(--ink-muted);">Ensemble RMSE</div></div>
+              <div><div style="font-size:1.4rem; font-weight:700; color:#5a2a70; font-family:var(--font-display);">4</div><div style="font-size:.78rem; color:var(--ink-muted);">e2tree leaves</div></div>
+            </div>
+            <div class="flex gap-3 mt-4" style="flex-wrap:wrap;">
+              <span class="pill" style="background:#ede8f8; color:#5a2a70; border-color:rgba(90,42,112,.2);">regression</span>
+              <span class="pill" style="background:#ede8f8; color:#5a2a70; border-color:rgba(90,42,112,.2);">RUL prediction</span>
+              <span class="pill" style="background:#ede8f8; color:#5a2a70; border-color:rgba(90,42,112,.2);">sensor data</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.25rem; background: var(--surface); border: 1px solid var(--rule-soft); border-radius: 12px; padding: 1.5rem;">
+            <div class="eyebrow" style="margin-bottom:.75rem;">e2tree leaves — RUL segments</div>
+            <div class="annotation-row">
+              <div class="ann-icon leaf-l">●</div>
+              <div class="ann-body">
+                <div class="ann-rule" style="color:#5a2a70;">Air Temp ≤ 305 K · Speed ≤ 1450 rpm</div>
+                <p>Mean RUL = 142h. Normal operating zone — no immediate intervention.</p>
+              </div>
+            </div>
+            <div class="annotation-row">
+              <div class="ann-icon leaf-h">●</div>
+              <div class="ann-body">
+                <div class="ann-rule" style="color:#5a2a70;">Air Temp > 305 K · Speed > 1450 rpm · Tool Wear > 200</div>
+                <p>Mean RUL = 8h. Schedule maintenance immediately.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Maintenance Interactive Explorer -->
+  <section id="maint-explorer">
+    <div class="container">
+      <div class="flex justify-between items-start mb-8" style="flex-wrap:wrap; gap:1.5rem;">
+        <div class="fade-in">
+          <span class="kicker">Interactive explorer</span>
+          <h2 class="display-md mt-4">
+            Trace every<br>
+            <em class="italic-display" style="font-weight:400">maintenance decision</em>.
+          </h2>
+          <p class="mt-4" style="color:var(--ink-muted); font-size:.9rem; max-width:26em;">
+            Click a leaf or a machine profile to animate the sensor path and read the maintenance recommendation — RUL prediction with full context.
+          </p>
+        </div>
+        <div class="fade-in fade-in-delay-1" style="display:flex; flex-direction:column; gap:.5rem; align-items:flex-end;">
+          <div style="font-size:.7rem; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-muted); margin-bottom:.25rem;">Machine profiles</div>
+          <div style="display:flex; flex-wrap:wrap; gap:.5rem; justify-content:flex-end;">
+            <button class="profile-btn" data-leaf="3">Machine A · normal conditions</button>
+            <button class="profile-btn mod-risk" data-leaf="4">Machine B · high speed</button>
+            <button class="profile-btn high-risk" data-leaf="6">Machine C · overheated + worn ⚠</button>
+            <button class="profile-btn mod-risk" data-leaf="7">Machine D · hot, fresh, gentle</button>
+            <button class="profile-btn mod-risk" data-leaf="8">Machine E · hot, fresh, hard</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="uc-tree-container fade-in fade-in-delay-2">
+        <svg id="uc-tree-svg-maint" viewBox="0 0 960 480" xmlns="http://www.w3.org/2000/svg" aria-label="Interactive e2tree for predictive maintenance">
+          <defs>
+            <filter id="mglow-safe" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/>
+              <feFlood flood-color="#30c070" flood-opacity=".5" result="c"/>
+              <feComposite in="c" in2="b" operator="in" result="g"/>
+              <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="mglow-crit" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="b"/>
+              <feFlood flood-color="#e05040" flood-opacity=".5" result="c"/>
+              <feComposite in="c" in2="b" operator="in" result="g"/>
+              <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- EDGES (same topology as credit tree) -->
+          <path class="tree-edge" data-edge="n0-n1" d="M 480,58 C 480,113 235,113 235,168"/>
+          <path class="tree-edge" data-edge="n0-n2" d="M 480,58 C 480,113 720,113 720,168"/>
+          <path class="tree-edge" data-edge="n1-n3" d="M 235,168 C 235,233 100,233 100,298"/>
+          <path class="tree-edge" data-edge="n1-n4" d="M 235,168 C 235,233 360,233 360,298"/>
+          <path class="tree-edge" data-edge="n2-n5" d="M 720,168 C 720,233 565,233 565,298"/>
+          <path class="tree-edge" data-edge="n2-n6" d="M 720,168 C 720,233 875,233 875,298"/>
+          <path class="tree-edge" data-edge="n5-n7" d="M 565,298 C 565,358 465,358 465,418"/>
+          <path class="tree-edge" data-edge="n5-n8" d="M 565,298 C 565,358 660,358 660,418"/>
+
+          <!-- EDGE LABELS -->
+          <text class="edge-label" x="340" y="96">YES</text>
+          <text class="edge-label" x="620" y="96">NO</text>
+          <text class="edge-label" x="148" y="222">YES</text>
+          <text class="edge-label" x="318" y="222">NO</text>
+          <text class="edge-label" x="622" y="222">YES</text>
+          <text class="edge-label" x="818" y="222">NO</text>
+          <text class="edge-label" x="498" y="358">YES</text>
+          <text class="edge-label" x="632" y="358">NO</text>
+
+          <!-- INTERNAL NODES -->
+          <g class="tree-node-g" data-node="n0">
+            <rect class="node-rect-internal" x="414" y="34" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="480" y="53">Air Temp</text>
+            <text class="node-text-sub"  x="480" y="68">≤ 305 K</text>
+          </g>
+          <g class="tree-node-g" data-node="n1">
+            <rect class="node-rect-internal" x="169" y="144" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="235" y="163">Rot. Speed</text>
+            <text class="node-text-sub"  x="235" y="178">≤ 1450 rpm</text>
+          </g>
+          <g class="tree-node-g" data-node="n2">
+            <rect class="node-rect-internal" x="654" y="144" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="720" y="163">Tool Wear</text>
+            <text class="node-text-sub"  x="720" y="178">≤ 180 min</text>
+          </g>
+          <g class="tree-node-g" data-node="n5">
+            <rect class="node-rect-internal" x="499" y="274" width="132" height="48" rx="8"/>
+            <text class="node-text-main" x="565" y="293">Torque</text>
+            <text class="node-text-sub"  x="565" y="308">≤ 42 Nm</text>
+          </g>
+
+          <!-- LEAF NODES -->
+          <!-- n3 Safe -->
+          <g class="tree-node-g leaf-node" data-node="n3" data-leaf="3">
+            <rect class="node-leaf-low"  x="34"  y="274" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf"     x="100" y="292">RUL: 142 h</text>
+            <text class="node-text-leaf-sub" x="100" y="307">Safe · operate</text>
+          </g>
+          <!-- n4 Monitor -->
+          <g class="tree-node-g leaf-node" data-node="n4" data-leaf="4">
+            <rect class="node-leaf-mod"  x="294" y="274" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf"     x="360" y="292">RUL: 68 h</text>
+            <text class="node-text-leaf-sub" x="360" y="307">Monitor speed</text>
+          </g>
+          <!-- n6 Critical -->
+          <g class="tree-node-g leaf-node" data-node="n6" data-leaf="6">
+            <rect class="node-leaf-high" x="809" y="274" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf"     x="875" y="292">RUL: 12 h ⚠</text>
+            <text class="node-text-leaf-sub" x="875" y="307">Stop immediately</text>
+          </g>
+          <!-- n7 Schedule -->
+          <g class="tree-node-g leaf-node" data-node="n7" data-leaf="7">
+            <rect class="node-leaf-mod"  x="399" y="394" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf"     x="465" y="412">RUL: 55 h</text>
+            <text class="node-text-leaf-sub" x="465" y="427">Schedule maint.</text>
+          </g>
+          <!-- n8 Prioritize -->
+          <g class="tree-node-g leaf-node" data-node="n8" data-leaf="8">
+            <rect class="node-leaf-mod"  x="594" y="394" width="132" height="48" rx="24"/>
+            <text class="node-text-leaf"     x="660" y="412">RUL: 31 h</text>
+            <text class="node-text-leaf-sub" x="660" y="427">Prioritize</text>
+          </g>
+        </svg>
+      </div>
+
+      <div id="uc-explain-panel-maint" role="region" aria-live="polite" style="min-height:120px; margin-top:.75rem;">
+        <p style="color:var(--ink-muted); font-size:.85rem; padding: 1rem 0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:.4rem;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Click a leaf or machine profile to read the sensor path and its maintenance recommendation.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: var(--paper-warm); padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="container">
+      <div class="grid grid-2" style="gap: 2.5rem;">
+        <div class="fade-in">
+          <span class="kicker">Regression workflow</span>
+          <h2 class="display-sm mt-4">Same API.<br>Continuous response.</h2>
+          <p class="mt-4">The only difference from the classification workflow is the response variable type. e2tree adapts its dissimilarity weighting automatically.</p>
+          <div class="code-block mt-6">
+            <button class="copy-btn">Copy</button>
+<span class="kw">library</span>(e2tree)
+<span class="kw">library</span>(randomForest)
+
+<span class="comment"># 1 — Train: predict remaining useful life (hours)</span>
+ensemble_rul &lt;- <span class="fn">randomForest</span>(
+  RUL ~ .,
+  data       = maint_train,
+  ntree      = <span class="num">500</span>,
+  importance = <span class="kw">TRUE</span>,
+  proximity  = <span class="kw">TRUE</span>
+)
+
+<span class="comment"># 2 — Dissimilarity for continuous response</span>
+D_rul &lt;- <span class="fn">createDisMatrix</span>(
+  ensemble_rul,
+  data     = maint_train,
+  label    = <span class="str">"RUL"</span>,      <span class="comment"># continuous — regression mode</span>
+  parallel = <span class="fn">list</span>(active = <span class="kw">TRUE</span>, no_cores = <span class="num">4</span>)
+)
+
+<span class="comment"># 3 — Fit regression e2tree</span>
+setting  &lt;- <span class="fn">list</span>(impTotal = <span class="num">0.08</span>, maxDec = <span class="num">0.01</span>,
+                 n = <span class="num">50</span>, level = <span class="num">3</span>)
+tree_rul &lt;- <span class="fn">e2tree</span>(
+  RUL ~ ., maint_train, D_rul, ensemble_rul, setting
+)
+
+<span class="comment"># 4 — Predict on test set</span>
+pred_rul &lt;- <span class="fn">predict</span>(tree_rul, newdata = maint_test)
+
+<span class="comment"># 5 — Per-machine sensor attribution (LOI)</span>
+loi_rul &lt;- <span class="fn">loi</span>(
+  tree_rul, ensemble_rul, maint_train, <span class="str">"RUL"</span>
+)
+<span class="fn">plot</span>(loi_rul)</div>
+        </div>
+
+        <div class="fade-in fade-in-delay-1">
+          <span class="kicker">How to read regression leaves</span>
+          <h2 class="display-sm mt-4">Leaf values are<br><em class="italic-display" style="font-weight:400">predicted means</em>.</h2>
+          <p class="mt-4">In a regression e2tree, each terminal node predicts the mean response of training observations in that node, weighted by the ensemble's dissimilarity structure. This is analogous to CART regression but guided by ensemble proximity rather than squared-error impurity.</p>
+          <div class="annotation-row" style="margin-top: 1.5rem;">
+            <div class="ann-icon split">⬦</div>
+            <div class="ann-body">
+              <h4>Split conditions</h4>
+              <p>Same structure as classification: IF <em>condition</em> THEN go left, ELSE go right. Multiple splits chain into a path that narrows to a specific operating regime.</p>
+            </div>
+          </div>
+          <div class="annotation-row">
+            <div class="ann-icon leaf-l">μ</div>
+            <div class="ann-body">
+              <h4>Leaf value = predicted RUL</h4>
+              <p>The predicted value for a new machine is the mean RUL of the training observations that share its leaf. Leaf width (spread of training RUL values) corresponds to local uncertainty &mdash; narrow leaves signal high-confidence predictions.</p>
+            </div>
+          </div>
+          <div class="annotation-row">
+            <div class="ann-icon leaf-h">σ</div>
+            <div class="ann-body">
+              <h4>High-uncertainty leaves flag grey zones</h4>
+              <p>A leaf with high variance in training RUL values indicates a region where the ensemble was less certain. These are the machines that need additional sensor monitoring, not just a scheduled maintenance date.</p>
+            </div>
+          </div>
+          <div class="annotation-row">
+            <div class="ann-icon leaf-m">LOI</div>
+            <div class="ann-body">
+              <h4>Local Importance for sensor attribution</h4>
+              <p><code style="font-family:var(--font-mono);font-size:.82em;">loi()</code> reveals which sensor reading most influenced the RUL estimate for each individual machine — a crucial diagnostic insight that no aggregate importance score can provide.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div><!-- end case-maintenance -->
+
+<!-- ================================================================ -->
+<!-- COMPARISON TABLE                                                   -->
+<!-- ================================================================ -->
+<section>
+  <div class="container">
+    <span class="kicker fade-in">§ Summary · Method comparison</span>
+    <h2 class="display-md mt-4 fade-in" style="max-width: 18em;">
+      How does e2tree compare<br>
+      <em class="italic-display" style="font-weight:400">to the alternatives</em>?
+    </h2>
+    <p class="mt-4 fade-in fade-in-delay-1" style="max-width: 44em; color: var(--ink-muted);">
+      e2tree occupies a unique position: it is not a post-hoc approximation (like LIME or SHAP), nor does it sacrifice predictive power (like plain CART). It is a faithful structural surrogate that preserves the ensemble's logic.
+    </p>
+
+    <div class="compare-wrap mt-8 fade-in fade-in-delay-2">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Interpretability</th>
+            <th>Faithful to ensemble</th>
+            <th>Global rules</th>
+            <th>Regression</th>
+            <th>No approximation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="hl-row">
+            <td>e2tree</td>
+            <td><span class="check">✓</span> Single decision tree</td>
+            <td><span class="check">✓</span> Structurally</td>
+            <td><span class="check">✓</span> IF-THEN rules</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span> Exact surrogate</td>
+          </tr>
+          <tr>
+            <td>Full ensemble (RF)</td>
+            <td><span class="cross">✗</span> Black box</td>
+            <td><span class="check">✓</span> Is the model</td>
+            <td><span class="cross">✗</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Plain CART</td>
+            <td><span class="check">✓</span> Single tree</td>
+            <td><span class="cross">✗</span> Independent model</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="partial">~</span> Lower accuracy</td>
+          </tr>
+          <tr>
+            <td>LIME</td>
+            <td><span class="partial">~</span> Per-instance</td>
+            <td><span class="partial">~</span> Local approximation</td>
+            <td><span class="cross">✗</span> No global rules</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">✗</span> Approximates locally</td>
+          </tr>
+          <tr>
+            <td>SHAP</td>
+            <td><span class="partial">~</span> Feature attributions</td>
+            <td><span class="check">✓</span> Game-theoretic</td>
+            <td><span class="cross">✗</span> No decision rules</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="partial">~</span> TreeSHAP is exact</td>
+          </tr>
+          <tr>
+            <td>Surrogate tree (naïve)</td>
+            <td><span class="check">✓</span> Single tree</td>
+            <td><span class="partial">~</span> Prediction-level only</td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">✗</span> Misses structure</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small mt-4" style="color:var(--ink-muted);">
+      "Faithful to ensemble" means the explainer reflects the ensemble's <em>internal structure</em> (proximity/co-occurrence), not just its output predictions.
+    </p>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section-tight" style="background: var(--paper-warm);">
+  <div class="container-narrow text-center">
+    <h2 class="display-md fade-in">
+      Start explaining <em class="italic-display" style="font-weight:400">your</em> ensemble.
+    </h2>
+    <p class="lede mt-4 fade-in fade-in-delay-1">Install from CRAN. Five lines of R. One interpretable tree.</p>
+    <div class="flex gap-4 justify-center mt-8 fade-in fade-in-delay-2" style="flex-wrap: wrap;">
+      <a href="documentation.html#install" class="btn btn-primary">
+        Install e2tree
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+      </a>
+      <a href="documentation.html" class="btn btn-ghost">
+        Full documentation
+      </a>
+      <a href="about.html#papers" class="btn btn-ghost">
+        Read the papers
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="wordmark">e2tree</div>
+        <p class="footer-tagline">Explainable Ensemble Trees for R.<br>MIT license · Available on CRAN.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Package</h4>
+        <ul>
+          <li><a href="documentation.html#install">Install</a></li>
+          <li><a href="documentation.html">Documentation</a></li>
+          <li><a href="https://github.com/massimoaria/e2tree" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://cran.r-project.org/package=e2tree" target="_blank" rel="noopener">CRAN</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="methods.html">Methods</a></li>
+          <li><a href="usecases.html">Use cases</a></li>
+          <li><a href="documentation.html#quickstart">Quick start</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <ul>
+          <li><a href="about.html">Team</a></li>
+          <li><a href="about.html#papers">Publications</a></li>
+          <li><a href="about.html#affiliations">Affiliations</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Massimo Aria &amp; Agostino Gnasso. MIT License.</span>
+      <span>University of Naples Federico II · K-Synth</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Scenario tabs
+document.querySelectorAll('.scenario-tab[data-case]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.scenario-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.case-section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    const section = document.getElementById('case-' + tab.dataset.case);
+    if (section) section.classList.add('active');
+  });
+});
+</script>
+<script src="js/main.js"></script>
+</body>
+</html>
