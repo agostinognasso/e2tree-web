@@ -6,7 +6,21 @@
   <meta name="theme-color" content="#0d1f40">
   <title>Use Cases · e2tree — Explainable Ensemble Trees in Practice</title>
   <meta name="description" content="Three real-world use cases showing how e2tree turns opaque ensemble models into auditable decision rules — medical diagnosis, credit scoring, and predictive maintenance.">
+  <link rel="canonical" href="https://e2tree.agostinognasso.com/usecases.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="e2tree">
+  <meta property="og:title" content="Use Cases · e2tree — Explainable Ensemble Trees in Practice">
+  <meta property="og:description" content="Three real-world use cases showing how e2tree turns opaque ensemble models into auditable decision rules — medical diagnosis, credit scoring, and predictive maintenance.">
+  <meta property="og:url" content="https://e2tree.agostinognasso.com/usecases.html">
+  <meta property="og:image" content="https://e2tree.agostinognasso.com/images/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Use Cases · e2tree — Explainable Ensemble Trees in Practice">
+  <meta name="twitter:description" content="Three real-world use cases showing how e2tree turns opaque ensemble models into auditable decision rules — medical diagnosis, credit scoring, and predictive maintenance.">
+  <meta name="twitter:image" content="https://e2tree.agostinognasso.com/images/og-card.png">
   <link rel="icon" type="image/png" href="images/e2tree_logo.png">
+  <link rel="apple-touch-icon" href="images/e2tree_logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -155,7 +169,7 @@
             A hospital's cardiology department uses an ensemble of decision trees trained on the <strong>Heart Disease UCI dataset</strong> to screen patients. The model achieves 88% AUC &mdash; impressive, but clinically unusable as a black box. Physicians cannot validate, challenge, or communicate a prediction without understanding its basis.
           </p>
           <p>
-            e2tree distils the ensemble's reasoning into a five-leaf decision tree with four interpretable split rules. The tree preserves 91% of the ensemble's proximity structure (measured by <code style="font-family:var(--font-mono);font-size:.88em;">eValidation()</code>) while reducing the model to something a cardiologist can recite from memory.
+            e2tree distils the ensemble's reasoning into a six-leaf decision tree with five interpretable split rules. The tree preserves 91% of the ensemble's proximity structure (measured by <code style="font-family:var(--font-mono);font-size:.88em;">eValidation()</code>) while reducing the model to something a cardiologist can recite from memory.
           </p>
         </div>
         <div style="grid-column: span 5;" class="fade-in fade-in-delay-1">
@@ -165,7 +179,7 @@
               <div><div style="font-size:1.4rem; font-weight:700; color:var(--e2-deep); font-family:var(--font-display);">303</div><div style="font-size:.78rem; color:var(--ink-muted);">Patients</div></div>
               <div><div style="font-size:1.4rem; font-weight:700; color:var(--e2-deep); font-family:var(--font-display);">13</div><div style="font-size:.78rem; color:var(--ink-muted);">Clinical features</div></div>
               <div><div style="font-size:1.4rem; font-weight:700; color:var(--e2-deep); font-family:var(--font-display);">88%</div><div style="font-size:.78rem; color:var(--ink-muted);">Ensemble AUC</div></div>
-              <div><div style="font-size:1.4rem; font-weight:700; color:var(--e2-deep); font-family:var(--font-display);">5</div><div style="font-size:.78rem; color:var(--ink-muted);">e2tree leaves</div></div>
+              <div><div style="font-size:1.4rem; font-weight:700; color:var(--e2-deep); font-family:var(--font-display);">6</div><div style="font-size:.78rem; color:var(--ink-muted);">e2tree leaves</div></div>
             </div>
             <div class="flex gap-3 mt-4" style="flex-wrap:wrap;">
               <span class="pill">binary classification</span>
@@ -226,8 +240,8 @@
             <div class="step-row">
               <div class="step-num">06</div>
               <div class="step-body">
-                <h4>Extract local importance</h4>
-                <p><code style="font-family:var(--font-mono);font-size:.82em;">loi()</code> shows which features drove the classification for each individual patient — essential for clinical audit trails.</p>
+                <h4>Explain the individual patient</h4>
+                <p><code style="font-family:var(--font-mono);font-size:.82em;">explain()</code> gives an additive attribution for each patient, the most similar past cases by the ensemble's own proximity, and — via <code style="font-family:var(--font-mono);font-size:.82em;">localLoI()</code> — how trustworthy that explanation is. Essential for clinical audit trails.</p>
               </div>
             </div>
           </div>
@@ -542,7 +556,7 @@ local_imp &lt;- <span class="fn">loi</span>(tree, ensemble, heart_train, <span c
             European banking regulation (EBA guidelines, Art. 22 GDPR) requires that automated credit decisions be explainable to applicants on request. A standard ensemble achieves 0.84 AUC on the German Credit dataset, but a compliance officer cannot narrate its logic in an appeal tribunal.
           </p>
           <p>
-            e2tree produces a four-leaf tree that accounts for 89% of the ensemble's proximity structure. Each leaf is a self-contained underwriting rule: "Applicants aged under 30 with no checking account history are low risk if their loan duration is ≤ 18 months" is a statement a compliance officer can defend in writing.
+            e2tree produces a five-leaf tree that accounts for 89% of the ensemble's proximity structure. Each leaf is a self-contained underwriting rule: "Applicants with a loan duration of 24 months or less and a healthy checking account are good credit risks" is a statement a compliance officer can defend in writing.
           </p>
           <p>
             Crucially, e2tree's variable importance ranking reveals that <em>checking account status</em> is the primary discriminator across the ensemble — a finding that would otherwise be buried in 500 trees of opaque split statistics, and that carries direct fairness-audit implications.
@@ -555,7 +569,7 @@ local_imp &lt;- <span class="fn">loi</span>(tree, ensemble, heart_train, <span c
               <div><div style="font-size:1.4rem; font-weight:700; color:var(--amber-dark); font-family:var(--font-display);">1,000</div><div style="font-size:.78rem; color:var(--ink-muted);">Applicants</div></div>
               <div><div style="font-size:1.4rem; font-weight:700; color:var(--amber-dark); font-family:var(--font-display);">20</div><div style="font-size:.78rem; color:var(--ink-muted);">Features</div></div>
               <div><div style="font-size:1.4rem; font-weight:700; color:var(--amber-dark); font-family:var(--font-display);">0.84</div><div style="font-size:.78rem; color:var(--ink-muted);">Ensemble AUC</div></div>
-              <div><div style="font-size:1.4rem; font-weight:700; color:var(--amber-dark); font-family:var(--font-display);">4</div><div style="font-size:.78rem; color:var(--ink-muted);">e2tree leaves</div></div>
+              <div><div style="font-size:1.4rem; font-weight:700; color:var(--amber-dark); font-family:var(--font-display);">5</div><div style="font-size:.78rem; color:var(--ink-muted);">e2tree leaves</div></div>
             </div>
             <div class="flex gap-3 mt-4" style="flex-wrap:wrap;">
               <span class="pill pill-amber">regulatory compliance</span>
@@ -805,10 +819,10 @@ vi$g_imp      <span class="comment"># ggplot2 importance chart</span></div>
             A manufacturing plant operates 500 CNC machines. An ensemble of decision trees predicts <em>remaining useful life</em> (RUL, in hours) from sensor readings — a regression problem. The ensemble achieves RMSE = 12h on the test set, but maintenance planners need to know <em>which sensor conditions</em> drove a short-RUL prediction.
           </p>
           <p>
-            The regression e2tree partitions the sensor space into four regions with distinct RUL profiles. A maintenance engineer can read the tree and say: "If air temperature is above 305 K <em>and</em> rotational speed exceeds 1450 rpm, schedule maintenance within 24 hours." No data science degree required.
+            The regression e2tree partitions the sensor space into five regions with distinct RUL profiles. A maintenance engineer can read the tree and say: "If air temperature is above 305 K <em>and</em> tool wear exceeds 180 minutes, halt the machine and replace the tool." No data science degree required.
           </p>
           <p>
-            Local Observation Importance (<code style="font-family:var(--font-mono);font-size:.88em;">loi()</code>) shows <em>which specific sensors</em> drove the short-RUL prediction for each individual machine — enabling targeted diagnostic interventions rather than blanket shutdowns.
+            <code style="font-family:var(--font-mono);font-size:.88em;">eContribution()</code> shows <em>which specific sensors</em> drove the short-RUL reconstruction for each individual machine — enabling targeted diagnostic interventions rather than blanket shutdowns. <code style="font-family:var(--font-mono);font-size:.88em;">localLoI()</code> flags the machines whose explanation is least reliable, so engineers know which readings to double-check.
           </p>
         </div>
         <div style="grid-column: span 5;" class="fade-in fade-in-delay-1">
@@ -818,7 +832,7 @@ vi$g_imp      <span class="comment"># ggplot2 importance chart</span></div>
               <div><div style="font-size:1.4rem; font-weight:700; color:#5a2a70; font-family:var(--font-display);">10k</div><div style="font-size:.78rem; color:var(--ink-muted);">Observations</div></div>
               <div><div style="font-size:1.4rem; font-weight:700; color:#5a2a70; font-family:var(--font-display);">6</div><div style="font-size:.78rem; color:var(--ink-muted);">Sensor features</div></div>
               <div><div style="font-size:1.4rem; font-weight:700; color:#5a2a70; font-family:var(--font-display);">12h</div><div style="font-size:.78rem; color:var(--ink-muted);">Ensemble RMSE</div></div>
-              <div><div style="font-size:1.4rem; font-weight:700; color:#5a2a70; font-family:var(--font-display);">4</div><div style="font-size:.78rem; color:var(--ink-muted);">e2tree leaves</div></div>
+              <div><div style="font-size:1.4rem; font-weight:700; color:#5a2a70; font-family:var(--font-display);">5</div><div style="font-size:.78rem; color:var(--ink-muted);">e2tree leaves</div></div>
             </div>
             <div class="flex gap-3 mt-4" style="flex-wrap:wrap;">
               <span class="pill" style="background:#ede8f8; color:#5a2a70; border-color:rgba(90,42,112,.2);">regression</span>
@@ -1052,7 +1066,7 @@ loi_rul &lt;- <span class="fn">loi</span>(
             <div class="ann-icon leaf-m">LOI</div>
             <div class="ann-body">
               <h4>Local Importance for sensor attribution</h4>
-              <p><code style="font-family:var(--font-mono);font-size:.82em;">loi()</code> reveals which sensor reading most influenced the RUL estimate for each individual machine — a crucial diagnostic insight that no aggregate importance score can provide.</p>
+              <p><code style="font-family:var(--font-mono);font-size:.82em;">eContribution()</code> reveals which sensor reading most influenced the RUL estimate for each individual machine — a crucial diagnostic insight that no aggregate importance score can provide.</p>
             </div>
           </div>
         </div>
@@ -1180,6 +1194,7 @@ loi_rul &lt;- <span class="fn">loi</span>(
         <ul>
           <li><a href="documentation.html#install">Install</a></li>
           <li><a href="documentation.html">Documentation</a></li>
+          <li><a href="news.html">Changelog</a></li>
           <li><a href="https://github.com/massimoaria/e2tree" target="_blank" rel="noopener">GitHub</a></li>
           <li><a href="https://cran.r-project.org/package=e2tree" target="_blank" rel="noopener">CRAN</a></li>
         </ul>

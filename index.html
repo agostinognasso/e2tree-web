@@ -5,8 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0d1f40">
   <title>e2tree — Explainable Ensemble Trees · R package</title>
-  <meta name="description" content="e2tree: an R package that distils any ensemble of decision trees into a single, interpretable tree while preserving predictive performance. Classification and regression.">
+  <meta name="description" content="e2tree: an R package that distils any tree ensemble into a single, interpretable tree — with fidelity to the original ensemble measured, not assumed. Classification and regression.">
+  <link rel="canonical" href="https://e2tree.agostinognasso.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="e2tree">
+  <meta property="og:title" content="e2tree — Explainable Ensemble Trees for R">
+  <meta property="og:description" content="Distil any tree ensemble into a single, interpretable tree — with fidelity to the original measured by the nLoI. Classification & regression. On CRAN.">
+  <meta property="og:url" content="https://e2tree.agostinognasso.com/">
+  <meta property="og:image" content="https://e2tree.agostinognasso.com/images/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="e2tree — Explainable Ensemble Trees for R">
+  <meta name="twitter:description" content="Distil any tree ensemble into a single, interpretable tree — with fidelity to the original measured by the nLoI. Classification & regression. On CRAN.">
+  <meta name="twitter:image" content="https://e2tree.agostinognasso.com/images/og-card.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "e2tree",
+    "applicationCategory": "DeveloperApplication",
+    "applicationSubCategory": "Statistical software (R package)",
+    "operatingSystem": "Windows, macOS, Linux",
+    "softwareVersion": "1.2.0",
+    "license": "https://opensource.org/licenses/MIT",
+    "url": "https://e2tree.agostinognasso.com/",
+    "downloadUrl": "https://cran.r-project.org/package=e2tree",
+    "codeRepository": "https://github.com/massimoaria/e2tree",
+    "author": [
+      { "@type": "Person", "name": "Massimo Aria" },
+      { "@type": "Person", "name": "Agostino Gnasso" }
+    ]
+  }
+  </script>
   <link rel="icon" type="image/png" href="images/e2tree_logo.png">
+  <link rel="apple-touch-icon" href="images/e2tree_logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -57,7 +90,7 @@
           <span class="italic-display" style="color:var(--e2-dark)">One tree</span> to explain it.
         </h1>
         <p class="lede fade-in fade-in-delay-1 mt-8" style="max-width: 38em;">
-          <strong style="color:var(--ink)">e2tree</strong> distils any ensemble of decision trees into a single, interpretable tree &mdash; preserving predictive accuracy while delivering transparent, human-readable decision rules. Supports <em>classification</em> and <em>regression</em> with any tree-based ensemble.
+          <strong style="color:var(--ink)">e2tree</strong> distils any ensemble of decision trees into a single, interpretable tree that reproduces the ensemble's own reasoning as transparent, human-readable rules &mdash; and measures how faithfully it does so. <em>Classification</em> and <em>regression</em>, on any tree-based ensemble.
         </p>
         <div class="flex gap-4 mt-8 fade-in fade-in-delay-2" style="flex-wrap: wrap;">
           <a href="documentation.html#install" class="btn btn-primary">
@@ -71,6 +104,12 @@
             Read the paper
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
           </a>
+        </div>
+        <div class="badge-row mt-8 fade-in fade-in-delay-3" aria-label="Package status badges">
+          <a href="https://cran.r-project.org/package=e2tree" target="_blank" rel="noopener"><img src="https://www.r-pkg.org/badges/version/e2tree" alt="CRAN version"></a>
+          <a href="https://cran.r-project.org/package=e2tree" target="_blank" rel="noopener"><img src="https://cranlogs.r-pkg.org/badges/e2tree" alt="CRAN downloads per month"></a>
+          <a href="https://cran.r-project.org/package=e2tree" target="_blank" rel="noopener"><img src="https://cranlogs.r-pkg.org/badges/grand-total/e2tree" alt="CRAN total downloads"></a>
+          <a href="https://github.com/massimoaria/e2tree/actions/workflows/R-CMD-check.yaml" target="_blank" rel="noopener"><img src="https://github.com/massimoaria/e2tree/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check status"></a>
         </div>
       </div>
 
@@ -86,9 +125,9 @@
           <div class="stat-sub">classification &amp; regression</div>
         </div>
         <div class="stat">
-          <div class="stat-num">2</div>
-          <div class="stat-label">Published papers</div>
-          <div class="stat-sub">Comp. Stat. · ASMBI</div>
+          <div class="stat-num">6</div>
+          <div class="stat-label">Ensemble backends</div>
+          <div class="stat-sub">bagging &amp; boosting</div>
         </div>
         <div class="stat">
           <div class="stat-num">MIT</div>
@@ -118,10 +157,10 @@
       </div>
       <div class="fade-in fade-in-delay-1">
         <p>
-          The result is a concise decision tree whose split rules, variable importances, and local interpretations faithfully reproduce what the ensemble learned &mdash; with no drop in predictive performance.
+          The result is a concise decision tree whose split rules, variable importances, and local explanations faithfully reproduce what the ensemble learned. That faithfulness is not assumed &mdash; it is measured, by the <strong>nLoI</strong> family of divergence statistics.
         </p>
         <p>
-          The framework supports both <em>classification</em> and <em>regression</em> tasks, integrates with <code style="font-family:var(--font-mono);font-size:.9em;background:var(--e2-soft);padding:.1em .4em;border-radius:4px;">randomForest</code> and <code style="font-family:var(--font-mono);font-size:.9em;background:var(--e2-soft);padding:.1em .4em;border-radius:4px;">ranger</code>, and is fully open-source on CRAN under the MIT license.
+          The framework supports both <em>classification</em> and <em>regression</em>, and works with any tree ensemble &mdash; <code style="font-family:var(--font-mono);font-size:.9em;background:var(--e2-soft);padding:.1em .4em;border-radius:4px;">randomForest</code>, <code style="font-family:var(--font-mono);font-size:.9em;background:var(--e2-soft);padding:.1em .4em;border-radius:4px;">ranger</code>, <code style="font-family:var(--font-mono);font-size:.9em;background:var(--e2-soft);padding:.1em .4em;border-radius:4px;">xgboost</code>, <code style="font-family:var(--font-mono);font-size:.9em;background:var(--e2-soft);padding:.1em .4em;border-radius:4px;">lightgbm</code>, <code style="font-family:var(--font-mono);font-size:.9em;background:var(--e2-soft);padding:.1em .4em;border-radius:4px;">gbm</code>, <code style="font-family:var(--font-mono);font-size:.9em;background:var(--e2-soft);padding:.1em .4em;border-radius:4px;">catboost</code>. Open-source on CRAN under the MIT license.
         </p>
         <div class="flex gap-3 mt-4" style="flex-wrap: wrap;">
           <span class="pill">#explainability</span>
@@ -321,45 +360,49 @@ pred &lt;- <span class="fn">predict</span>(tree, newdata = validation)</div>
     <div class="grid grid-2 mt-8" style="gap: 1.25rem;">
       <div class="card fade-in">
         <div class="module-num" style="display:inline-block; margin-bottom: .75rem;">01</div>
-        <h3 class="module-title" style="font-size:1.05rem; margin-bottom:.5rem;">Classification &amp; Regression</h3>
-        <p class="module-desc">Works for both classification (factor response) and regression (continuous response). The workflow is the same in both cases.</p>
+        <h3 class="module-title" style="font-size:1.05rem; margin-bottom:.5rem;">Any Tree Ensemble</h3>
+        <p class="module-desc">Bagging or boosting, classification or regression. A three-method adapter layer isolates the backend, so the algorithm never changes &mdash; and dissimilarity matrices are tagged with the model that produced them.</p>
         <div class="module-tags mt-4">
           <span class="pill">randomForest</span>
           <span class="pill">ranger</span>
-          <span class="pill">rpart-compatible</span>
+          <span class="pill">xgboost</span>
+          <span class="pill">lightgbm</span>
+          <span class="pill">gbm</span>
+          <span class="pill">catboost</span>
         </div>
       </div>
 
       <div class="card fade-in fade-in-delay-1">
         <div class="module-num" style="display:inline-block; margin-bottom: .75rem;">02</div>
-        <h3 class="module-title" style="font-size:1.05rem; margin-bottom:.5rem;">Structural Validation</h3>
-        <p class="module-desc"><code style="font-family:var(--font-mono);font-size:.88em;">eValidation()</code> measures how closely the e2tree matches the ensemble's proximity structure. It returns concordance metrics and a proximity heatmap.</p>
+        <h3 class="module-title" style="font-size:1.05rem; margin-bottom:.5rem;">Measured Fidelity, Not Assumed</h3>
+        <p class="module-desc">The <strong>nLoI</strong> quantifies <em>agreement</em> between the ensemble's proximity structure and the tree's &mdash; and decomposes into within- and between-node parts, so you learn <em>where</em> reconstruction fails. Alongside Hellinger, wRMSE, RV and SSIM, under one permutation framework.</p>
         <div class="module-tags mt-4">
-          <span class="pill">proximity</span>
-          <span class="pill">fidelity metrics</span>
+          <span class="pill">nLoI</span>
+          <span class="pill">Cressie&ndash;Read</span>
+          <span class="pill">permutation test</span>
         </div>
       </div>
 
       <div class="card fade-in">
         <div class="module-num" style="display:inline-block; margin-bottom: .75rem;">03</div>
-        <h3 class="module-title" style="font-size:1.05rem; margin-bottom:.5rem;">Variable &amp; Local Importance</h3>
-        <p class="module-desc"><code style="font-family:var(--font-mono);font-size:.88em;">vimp()</code> provides global variable importance from the tree structure. <code style="font-family:var(--font-mono);font-size:.88em;">loi()</code> adds observation-level importance with optional permutation-based significance testing.</p>
+        <h3 class="module-title" style="font-size:1.05rem; margin-bottom:.5rem;">Local Explanations You Can Trust</h3>
+        <p class="module-desc"><code style="font-family:var(--font-mono);font-size:.88em;">explain()</code> composes the whole per-instance layer: additive attribution, nearest cases by the ensemble's own proximity, region fidelity via <code style="font-family:var(--font-mono);font-size:.88em;">localLoI()</code>, plus verified counterfactuals and bootstrap stability.</p>
         <div class="module-tags mt-4">
-          <span class="pill">global importance</span>
-          <span class="pill">local importance</span>
-          <span class="pill">permutation test</span>
+          <span class="pill">localLoI()</span>
+          <span class="pill">eContribution()</span>
+          <span class="pill">eNeighbors()</span>
+          <span class="pill">eCounterfactual()</span>
         </div>
       </div>
 
       <div class="card fade-in fade-in-delay-1">
         <div class="module-num" style="display:inline-block; margin-bottom: .75rem;">04</div>
-        <h3 class="module-title" style="font-size:1.05rem; margin-bottom:.5rem;">Rich Interoperability</h3>
-        <p class="module-desc">e2tree objects convert to <code style="font-family:var(--font-mono);font-size:.88em;">rpart</code> format (for <em>rpart.plot</em>) or to <em>partykit</em>'s <code style="font-family:var(--font-mono);font-size:.88em;">constparty</code> format. Both give access to the standard R tree visualization tools.</p>
+        <h3 class="module-title" style="font-size:1.05rem; margin-bottom:.5rem;">Panel Data &amp; Interoperability</h3>
+        <p class="module-desc"><code style="font-family:var(--font-mono);font-size:.88em;">panel_e2tree()</code> decomposes longitudinal features à la Mundlak into between- and within-unit components, explaining each. e2tree objects also convert to <em>rpart</em> and <em>partykit</em> formats.</p>
         <div class="module-tags mt-4">
+          <span class="pill">panel_e2tree()</span>
           <span class="pill">as.rpart()</span>
           <span class="pill">as.party()</span>
-          <span class="pill">rpart.plot</span>
-          <span class="pill">partykit</span>
         </div>
       </div>
     </div>
@@ -381,7 +424,7 @@ pred &lt;- <span class="fn">predict</span>(tree, newdata = validation)</div>
       Peer-reviewed <em class="italic-display" style="font-weight:400">methodology</em>.
     </h2>
     <p class="lede mt-4 fade-in fade-in-delay-1">
-      Two peer-reviewed papers describe the method &mdash; one for classification, one for regression.
+      Two peer-reviewed papers describe the method &mdash; one for classification, one for regression. A third, under review, formalises how reconstruction quality is measured.
     </p>
 
     <div class="grid" style="gap: 1rem; margin-top: 2.5rem;">
@@ -403,7 +446,17 @@ pred &lt;- <span class="fn">predict</span>(tree, newdata = validation)</div>
         </span>
         <p style="margin:0; line-height:1.7;">
           <strong>Aria, M., Gnasso, A., Iorio, C., &amp; Fokkema, M.</strong> (2026). Extending Explainable Ensemble Trees to Regression Contexts. <em>Applied Stochastic Models in Business and Industry</em>, <strong>42</strong>(1), e70064.
-          <a href="#" target="_blank" rel="noopener" style="margin-left:.5rem;">doi:10.1002/asmb.70064 ↗</a>
+          <a href="https://doi.org/10.1002/asmb.70064" target="_blank" rel="noopener" style="margin-left:.5rem;">doi:10.1002/asmb.70064 ↗</a>
+        </p>
+      </div>
+
+      <div class="citation fade-in fade-in-delay-2" style="border-left-color: var(--ink-muted);">
+        <span class="paper-badge" style="margin-bottom: .75rem; display:inline-flex; background: var(--paper-deep); color: var(--ink-soft); border-color: var(--rule);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Reconstruction quality · Under review
+        </span>
+        <p style="margin:0; line-height:1.7;">
+          <strong>Aria, M., Gnasso, A., &amp; Iorio, C.</strong> A Family of Divergence Measures for Evaluating the Reconstruction Quality of Explainable Ensemble Trees. Submitted to <em>Computational Statistics &amp; Data Analysis</em>.
         </p>
       </div>
     </div>
@@ -430,6 +483,7 @@ pred &lt;- <span class="fn">predict</span>(tree, newdata = validation)</div>
         <ul>
           <li><a href="documentation.html#install">Install</a></li>
           <li><a href="documentation.html">Documentation</a></li>
+          <li><a href="news.html">Changelog</a></li>
           <li><a href="https://github.com/massimoaria/e2tree" target="_blank" rel="noopener">GitHub</a></li>
           <li><a href="https://cran.r-project.org/package=e2tree" target="_blank" rel="noopener">CRAN</a></li>
         </ul>

@@ -5,8 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0d1f40">
   <title>Methods · e2tree — Explainable Ensemble Trees</title>
-  <meta name="description" content="A complete walkthrough of e2tree's methodology: co-occurrence dissimilarity, tree construction, classification, regression, validation, and local importance.">
+  <meta name="description" content="A complete walkthrough of e2tree's methodology: co-occurrence dissimilarity, tree construction, classification, regression, and the nLoI family of reconstruction-quality measures.">
+  <link rel="canonical" href="https://e2tree.agostinognasso.com/methods.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="e2tree">
+  <meta property="og:title" content="Methods · e2tree — Explainable Ensemble Trees">
+  <meta property="og:description" content="A complete walkthrough of e2tree's methodology: co-occurrence dissimilarity, tree construction, classification, regression, and the nLoI family of reconstruction-quality measures.">
+  <meta property="og:url" content="https://e2tree.agostinognasso.com/methods.html">
+  <meta property="og:image" content="https://e2tree.agostinognasso.com/images/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Methods · e2tree — Explainable Ensemble Trees">
+  <meta name="twitter:description" content="A complete walkthrough of e2tree's methodology: co-occurrence dissimilarity, tree construction, classification, regression, and the nLoI family of reconstruction-quality measures.">
+  <meta name="twitter:image" content="https://e2tree.agostinognasso.com/images/og-card.png">
   <link rel="icon" type="image/png" href="images/e2tree_logo.png">
+  <link rel="apple-touch-icon" href="images/e2tree_logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -62,7 +76,7 @@
           <em class="italic-display" style="font-weight:400">transparent rules</em>.
         </h1>
         <p class="lede mt-6 fade-in fade-in-delay-1">
-          e2tree turns the ensemble's internal structure into a pairwise dissimilarity matrix, then uses that matrix to grow a single decision tree. This page covers the math behind each step.
+          e2tree turns the ensemble's internal structure into a pairwise dissimilarity matrix, then uses that matrix to grow a single decision tree &mdash; and measures how faithfully that tree reconstructs the ensemble. This page covers the math behind each step.
         </p>
       </div>
       <div style="grid-column: span 5;" class="fade-in fade-in-delay-2">
@@ -83,9 +97,9 @@
             <div class="stat-sub">single interpretable tree</div>
           </div>
           <div class="stat">
-            <div class="stat-num" style="font-size:1.5rem; font-family: var(--font-mono);">LOI</div>
-            <div class="stat-label">Local Importance</div>
-            <div class="stat-sub">observation-level explanations</div>
+            <div class="stat-num" style="font-size:1.4rem; font-family: var(--font-mono);">nLoI</div>
+            <div class="stat-label">Loss of Interpretability</div>
+            <div class="stat-sub">reconstruction fidelity</div>
           </div>
         </div>
       </div>
@@ -97,7 +111,7 @@
 <section style="background: var(--paper-warm);">
   <div class="container">
     <div class="grid grid-12" style="gap: 3rem; align-items: start;">
-      <div style="grid-column: span 5;" class="fade-in">
+      <div style="grid-column: span 7;" class="fade-in">
         <span class="kicker">Dissimilarity</span>
         <h2 class="display-md mt-4">
           Encoding the ensemble in a <em class="italic-display" style="font-weight:400">single matrix</em>.
@@ -119,11 +133,11 @@
         </p>
       </div>
 
-      <div style="grid-column: span 7;" class="fade-in fade-in-delay-1">
+      <div style="grid-column: span 5;" class="fade-in fade-in-delay-1">
         <figure class="figure">
-          <img src="images/README-unnamed-chunk-16-1.png" alt="e2tree proximity heatmap showing ensemble co-occurrence structure">
+          <img loading="lazy" decoding="async" src="images/README-unnamed-chunk-19-3.png" alt="Ensemble proximity heatmap showing the co-occurrence structure learned by the random forest">
           <figcaption class="figcaption">
-            <strong>Figure 1</strong> Proximity heatmap produced by <code>eValidation()</code>. Warmer cells indicate higher co-occurrence frequency (lower dissimilarity); the block structure reflects the underlying class separation learned by the ensemble.
+            <strong>Figure 1</strong> Ensemble-induced proximity heatmap. Darker cells indicate higher co-occurrence frequency (lower dissimilarity); the block structure reflects the class separation learned by the ensemble.
           </figcaption>
         </figure>
       </div>
@@ -137,7 +151,7 @@
     <div class="grid grid-12" style="gap: 3rem; align-items: start;">
       <div style="grid-column: span 7;" class="fade-in">
         <figure class="figure">
-          <img src="images/README-unnamed-chunk-11-1.png" alt="e2tree classification tree on iris dataset">
+          <img loading="lazy" decoding="async" src="images/README-unnamed-chunk-11-1.png" alt="e2tree classification tree on iris dataset">
           <figcaption class="figcaption">
             <strong>Figure 2</strong> e2tree applied to the iris dataset. The single tree recovers the three species using just two variables (Petal.Length and Petal.Width), mirroring the splits favoured by the underlying ensemble.
           </figcaption>
@@ -210,15 +224,15 @@
 
       <div style="grid-column: span 6; display: flex; flex-direction: column; gap: 1.25rem;" class="fade-in fade-in-delay-1">
         <figure class="figure">
-          <img src="images/README-unnamed-chunk-9-1.png" alt="e2tree on iris — variable importance">
+          <img loading="lazy" decoding="async" src="images/README-unnamed-chunk-19-1.png" alt="Variable importance from the e2tree classification model on iris">
           <figcaption class="figcaption">
-            <strong>Figure 3</strong> Variable importance from the e2tree classification model on iris. Petal variables dominate, consistent with the underlying ensemble.
+            <strong>Figure 3</strong> Variable importance from the e2tree classification model on iris, produced by <code>vimp()</code>. Petal variables dominate, consistent with the underlying ensemble.
           </figcaption>
         </figure>
         <figure class="figure">
-          <img src="images/README-unnamed-chunk-10-1.png" alt="e2tree classification tree visualization">
+          <img loading="lazy" decoding="async" src="images/README-unnamed-chunk-13-1.png" alt="e2tree converted to partykit constparty and plotted">
           <figcaption class="figcaption">
-            <strong>Figure 4</strong> rpart.plot rendering of the e2tree. Decision rules are human-readable and readily communicable to non-technical stakeholders.
+            <strong>Figure 4</strong> The same tree converted with <code>as.party()</code> and rendered by <em>partykit</em>. Terminal nodes carry class-distribution bar plots; decision rules stay human-readable.
           </figcaption>
         </figure>
       </div>
@@ -237,7 +251,7 @@
     </div>
 
     <div class="grid grid-12" style="gap: 3rem; align-items: start;">
-      <div style="grid-column: span 5;" class="fade-in">
+      <div style="grid-column: span 7;" class="fade-in">
         <p>
           Extending e2tree to regression required redefining the goodness-of-fit weight W. The co-occurrence formula has the same structure as the classification case, but the weight now uses the normalised mean squared error (NMSE) at the node: nodes where the ensemble predicts poorly contribute less to the co-occurrence of their observations.
         </p>
@@ -250,10 +264,21 @@
           where <span class="math-inline" id="sim-inline"></span>, <em>p(t)</em> = n(t)/N is the proportion of observations in node <em>t</em>, and MSE<sub>max</sub> is the theoretical maximum MSE under the Jacobson bound. Two observations sharing a leaf only count toward co-occurrence to the extent that the ensemble predicts accurately in that node.
         </p>
         <p>
-          The extension is fully described in the 2026 paper in <em>Applied Stochastic Models in Business and Industry</em>. The R implementation follows the same workflow as the classification case.
+          The extension is fully described in the 2026 paper in <em>Applied Stochastic Models in Business and Industry</em>. The R implementation follows the same workflow as the classification case: only the response type changes.
         </p>
 
-        <div class="code-block mt-6">
+        <div class="module mt-4">
+          <div class="module-num">reg</div>
+          <div>
+            <h3 class="module-title">What changes, what stays</h3>
+            <p class="module-desc">Leaf predictions become the group mean of the training observations in the node, and <code style="font-family:var(--font-mono);font-size:.88em;">predict()</code> additionally returns a node-level standard deviation. Splitting, validation, and importance all work exactly as in the classification case.</p>
+            <div class="module-tags"><span class="pill">continuous response</span><span class="pill">NMSE weight</span><span class="pill">group means</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="grid-column: span 5;" class="fade-in fade-in-delay-1">
+        <div class="code-block">
           <button class="copy-btn">Copy</button>
 <span class="comment"># Regression example — mtcars</span>
 ensemble_reg &lt;- <span class="fn">randomForest</span>(
@@ -275,79 +300,245 @@ setting  &lt;- <span class="fn">list</span>(impTotal = <span class="num">0.1</sp
                  n = <span class="num">2</span>, level = <span class="num">4</span>)
 tree_reg &lt;- <span class="fn">e2tree</span>(
   mpg ~ ., training, D_reg, ensemble_reg, setting
-)</div>
-      </div>
+)
 
-      <div style="grid-column: span 7; display: flex; flex-direction: column; gap: 1.25rem;" class="fade-in fade-in-delay-1">
-        <figure class="figure">
-          <img src="images/README-unnamed-chunk-20-1.png" alt="e2tree regression tree on mtcars">
-          <figcaption class="figcaption">
-            <strong>Figure 5</strong> e2tree regression tree on the mtcars dataset. The tree partitions the feature space into regions of similar predicted fuel economy (mpg), with leaf values representing group means.
-          </figcaption>
-        </figure>
-        <figure class="figure">
-          <img src="images/README-unnamed-chunk-22-1.png" alt="Predicted vs actual — e2tree regression">
-          <figcaption class="figcaption">
-            <strong>Figure 6</strong> Predicted vs. observed values for the regression e2tree on the test set. The piecewise structure is clearly visible; overall fit remains competitive with the full ensemble.
-          </figcaption>
-        </figure>
+<span class="comment"># Leaf value = group mean; sd = node dispersion</span>
+pred &lt;- <span class="fn">predict</span>(tree_reg, newdata = validation)</div>
+
+        <div class="card mt-6" style="background: var(--paper-warm); border-color: var(--rule-soft);">
+          <div class="eyebrow" style="color: var(--e2-dark);">Reference</div>
+          <p style="font-size: .88rem; margin: .5rem 0 0;">
+            Aria, M., Gnasso, A., Iorio, C., &amp; Fokkema, M. (2026). Extending Explainable Ensemble Trees to Regression Contexts. <em>ASMBI</em>, 42(1), e70064.
+          </p>
+          <a href="https://doi.org/10.1002/asmb.70064" target="_blank" rel="noopener" class="btn btn-ghost mt-4" style="padding: .45rem 1rem; font-size: .82rem;">
+            Read the paper ↗
+          </a>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- SECTION V — VALIDATION & LOI -->
+<!-- SECTION IV-b — ENSEMBLE BACKENDS -->
 <section style="background: var(--paper-warm);">
   <div class="container">
-    <div class="grid grid-2" style="gap: 3rem; align-items: start;">
-
-      <!-- eValidation -->
-      <div class="fade-in">
-        <span class="kicker">Validation</span>
-        <h2 class="display-sm mt-4">
-          <em class="italic-display" style="font-weight:400">eValidation</em> — structural fidelity.
+    <div class="grid grid-12" style="gap: 3rem; align-items: start;">
+      <div style="grid-column: span 5;" class="fade-in">
+        <span class="kicker">Backends</span>
+        <h2 class="display-md mt-4">
+          Bagging, boosting &mdash; <em class="italic-display" style="font-weight:400">any tree ensemble</em>.
         </h2>
-        <p class="mt-4">
-          <code style="font-family:var(--font-mono);font-size:.88em;">eValidation()</code> measures how closely the e2tree's proximity structure matches the original ensemble's. It computes concordance between <strong>O</strong> and the tree's own proximity matrix, returning a numeric score and a heatmap.
+        <p class="mt-6">
+          e2tree only ever asks an ensemble two questions: <em>which terminal node does each observation fall into, in each tree?</em> and <em>what does the ensemble predict?</em> Everything else &mdash; the co-occurrence matrix, the tree, the fidelity measures &mdash; follows from those answers.
         </p>
-        <ul style="list-style:none; padding:0; color: var(--ink-soft);">
-          <li style="padding:.45rem 0; border-top:1px solid var(--rule-soft);">· <code style="font-family:var(--font-mono);font-size:.88em;">measures()</code> — quantitative concordance metrics</li>
-          <li style="padding:.45rem 0; border-top:1px solid var(--rule-soft);">· <code style="font-family:var(--font-mono);font-size:.88em;">proximity()</code> — tree proximity heatmap</li>
-          <li style="padding:.45rem 0; border-top:1px solid var(--rule-soft); border-bottom:1px solid var(--rule-soft);">· <code style="font-family:var(--font-mono);font-size:.88em;">plot()</code> — visualise fidelity</li>
-        </ul>
-        <figure class="figure mt-6">
-          <img src="images/README-unnamed-chunk-16-2.png" alt="eValidation proximity comparison">
-          <figcaption class="figcaption">
-            <strong>Figure 7</strong> Side-by-side comparison of ensemble-induced proximity (left) and e2tree-induced proximity (right), confirming high structural fidelity.
-          </figcaption>
-        </figure>
+        <p>
+          That contract is isolated behind a three-method adapter layer, so the algorithm itself never changes. Supporting a new ensemble class means implementing <code style="font-family:var(--font-mono);font-size:.88em;">get_ensemble_type()</code>, <code style="font-family:var(--font-mono);font-size:.88em;">extract_terminal_nodes()</code> and <code style="font-family:var(--font-mono);font-size:.88em;">get_ensemble_predictions()</code> for it.
+        </p>
+        <p class="small mt-4" style="padding: .9rem 1.1rem; background: var(--amber-tint); border: 1px solid rgba(196,125,46,.2); border-radius: 8px;">
+          <strong style="color: var(--amber-dark);">Interpretation note.</strong> The dissimilarity scale differs systematically between bagging and boosting backends. Boosted trees are shallow and highly correlated, so co-occurrence is denser; compare nLoI values within a backend, not across.
+        </p>
       </div>
 
-      <!-- LOI -->
-      <div class="fade-in fade-in-delay-1">
-        <span class="kicker">Local importance</span>
-        <h2 class="display-sm mt-4">
-          <em class="italic-display" style="font-weight:400">loi</em> — per-observation explanations.
-        </h2>
-        <p class="mt-4">
-          While <code style="font-family:var(--font-mono);font-size:.88em;">vimp()</code> summarises the overall contribution of each predictor, <strong>Local Observation Importance</strong> (<code style="font-family:var(--font-mono);font-size:.88em;">loi()</code>) attributes importance at the individual observation level &mdash; so you can explain why the model reached a specific conclusion for a specific case.
+      <div style="grid-column: span 7;" class="fade-in fade-in-delay-1">
+        <div class="table-wrap">
+          <table class="backend-table">
+            <thead>
+              <tr><th>Package</th><th>Class</th><th>Family</th><th>Tasks</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>randomForest</td><td><code>randomForest</code></td><td>Bagging</td><td>class. &amp; reg.</td></tr>
+              <tr><td>ranger</td><td><code>ranger</code></td><td>Bagging</td><td>class. &amp; reg.</td></tr>
+              <tr><td>xgboost</td><td><code>xgb.Booster</code></td><td>Boosting</td><td>class. &amp; reg.</td></tr>
+              <tr><td>lightgbm</td><td><code>lgb.Booster</code></td><td>Boosting</td><td>class. &amp; reg.</td></tr>
+              <tr><td>gbm</td><td><code>gbm</code></td><td>Boosting</td><td>class. &amp; reg.</td></tr>
+              <tr><td>catboost</td><td><code>catboost.Model</code></td><td>Boosting</td><td>class. &amp; reg.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block mt-6" style="font-size: .8rem;">
+          <button class="copy-btn">Copy</button>
+<span class="comment"># The workflow is identical regardless of the backend</span>
+ensemble &lt;- xgboost::<span class="fn">xgboost</span>(data = X, label = y, nrounds = <span class="num">200</span>)
+
+D    &lt;- <span class="fn">createDisMatrix</span>(ensemble, data = training, label = <span class="str">"y"</span>)
+tree &lt;- <span class="fn">e2tree</span>(y ~ ., training, D, ensemble)
+
+<span class="comment"># D is tagged with its backend: reusing it with a</span>
+<span class="comment"># different model raises a warning, not a silent bug</span>
+<span class="fn">attr</span>(D, <span class="str">"ensemble_backend"</span>)
+<span class="comment">#> [1] "xgb.Booster"</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION V — nLoI: RECONSTRUCTION QUALITY -->
+<section>
+  <div class="container">
+    <div class="mb-10">
+      <span class="kicker fade-in">Reconstruction quality</span>
+      <h2 class="display-md mt-4 fade-in" style="max-width: 22em;">
+        Not association &mdash; <em class="italic-display" style="font-weight:400">agreement</em>.
+      </h2>
+      <p class="lede mt-4 fade-in fade-in-delay-1" style="max-width: 44em;">
+        e2tree is <strong>interpretive, not predictive</strong>. Its quality is fidelity to the ensemble it explains, never accuracy against the outcome. Measuring that fidelity properly needs a scale-sensitive measure of agreement.
+      </p>
+    </div>
+
+    <div class="grid grid-12" style="gap: 3rem; align-items: start;">
+      <div style="grid-column: span 7;" class="fade-in">
+        <p>
+          The ensemble matrix <strong>O</strong> holds continuous values in (0,&nbsp;1); the e2tree matrix <strong>Ô</strong> is crisp and block-diagonal, zero for every pair the tree separates. Two matrices can correlate perfectly and still disagree systematically &mdash; the classic <em>correlation vs. concordance</em> distinction of Bland &amp; Altman. A correlation-based statistic such as the Mantel test is scale-invariant, so it is blind to exactly the discrepancy that matters here.
         </p>
 
-        <p>The local importance score for observation <span class="math-inline" id="loi-i"></span> and variable <span class="math-inline" id="loi-j"></span> is defined as:</p>
+        <p>
+          The <strong>Loss of Interpretability</strong> answers the right question. It is a direct, scale-sensitive divergence between the two co-occurrence matrices:
+        </p>
 
         <div class="math-block" id="eq-loi"></div>
 
-        <p>where <span class="math-inline" id="loi-desc"></span> measures the change in the node's dissimilarity when variable <em>j</em> is excluded from the split at the node to which <em>i</em> belongs.</p>
+        <p>
+          Each squared discrepancy is normalised by <span class="math-inline" id="loi-maxterm"></span>, which makes every contribution dimensionless and concentrates the measure's sensitivity on high-proximity pairs: failures to reconstruct a strong association incur a substantial penalty, while near-zero co-occurrences contribute little.
+        </p>
 
-        <ul style="list-style:none; padding:0; color: var(--ink-soft); margin-top: 1rem;">
-          <li style="padding:.45rem 0; border-top:1px solid var(--rule-soft);">· <code style="font-family:var(--font-mono);font-size:.88em;">loi()</code> — local importance scores per observation</li>
-          <li style="padding:.45rem 0; border-top:1px solid var(--rule-soft);">· <code style="font-family:var(--font-mono);font-size:.88em;">loi_perm()</code> — permutation-based significance</li>
-          <li style="padding:.45rem 0; border-top:1px solid var(--rule-soft); border-bottom:1px solid var(--rule-soft);">· <code style="font-family:var(--font-mono);font-size:.88em;">plot()</code> — visualise importance landscape</li>
-        </ul>
-        <figure class="figure mt-6">
-          <img src="images/README-unnamed-chunk-26-1.png" alt="Local Observation Importance plot">
+        <p>
+          Dividing by the number of unique pairs <span class="math-inline" id="loi-M"></span> yields the <strong>normalized LoI</strong>, an average per-pair discrepancy that is comparable across datasets of any size:
+        </p>
+
+        <div class="math-block" id="eq-nloi"></div>
+
+        <p>
+          The nLoI is bounded, non-negative, symmetric, permutation-invariant, and vanishes if and only if the reconstruction is exact. It is a robustified Neyman-type statistic, and sits inside the <strong>Cressie&ndash;Read power divergence family</strong> at <span class="math-inline" id="loi-lambda"></span>.
+        </p>
+      </div>
+
+      <div style="grid-column: span 5;" class="fade-in fade-in-delay-1">
+        <div class="card" style="background: var(--surface);">
+          <div class="eyebrow" style="color: var(--e2-dark);">Under review</div>
+          <p style="font-size: .9rem; margin: .5rem 0 0; line-height: 1.6;">
+            <strong>Aria, M., Gnasso, A., &amp; Iorio, C.</strong> A Family of Divergence Measures for Evaluating the Reconstruction Quality of Explainable Ensemble Trees.
+          </p>
+          <p class="small mt-2" style="margin-bottom: 0;">Submitted to <em>Computational Statistics &amp; Data Analysis</em>.</p>
+          <div class="flex gap-3 mt-4" style="flex-wrap: wrap;">
+            <span class="pill">nLoI</span>
+            <span class="pill">Cressie&ndash;Read</span>
+            <span class="pill">agreement</span>
+          </div>
+        </div>
+
+        <div class="card mt-6" style="background: var(--surface);">
+          <div class="eyebrow" style="color: var(--e2-dark);">A toolkit, not one number</div>
+          <p style="font-size: .88rem; margin-top: .5rem;">
+            <code style="font-family:var(--font-mono);font-size:.88em;">eValidation()</code> complements the nLoI with four measures, each capturing a distinct structural facet of approximation quality, all under one permutation-testing framework:
+          </p>
+          <ul style="list-style:none; padding:0; color: var(--ink-soft); font-size: .88rem;">
+            <li style="padding:.4rem 0; border-top:1px solid var(--rule-soft);">· <strong>Hellinger</strong> distance</li>
+            <li style="padding:.4rem 0; border-top:1px solid var(--rule-soft);">· <strong>wRMSE</strong> — weighted root mean squared error</li>
+            <li style="padding:.4rem 0; border-top:1px solid var(--rule-soft);">· <strong>RV coefficient</strong></li>
+            <li style="padding:.4rem 0; border-top:1px solid var(--rule-soft); border-bottom:1px solid var(--rule-soft);">· <strong>SSIM</strong> — structural similarity index</li>
+          </ul>
+          <p class="small mt-4" style="margin-bottom: 0;">The Mantel test remains available via <code style="font-family:var(--font-mono);font-size:.88em;">test = "mantel"</code> for association, not agreement.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DECOMPOSITION -->
+    <div class="grid grid-12 mt-12" style="gap: 3rem; align-items: start;">
+      <div style="grid-column: span 7;" class="fade-in">
+        <span class="kicker">Decomposition</span>
+        <h2 class="display-sm mt-4">
+          Where &mdash; and <em class="italic-display" style="font-weight:400">why</em> &mdash; reconstruction fails.
+        </h2>
+        <p class="mt-6">
+          The nLoI's distinctive property is that it splits cleanly in two. Let <span class="math-inline" id="loi-pin"></span> be the pairs the e2tree groups together and <span class="math-inline" id="loi-pout"></span> the pairs it separates. Because separated pairs have <span class="math-inline" id="loi-ohat0"></span> by construction, their contribution collapses to <span class="math-inline" id="loi-collapse"></span>, and the statistic decomposes exactly:
+        </p>
+
+        <div class="math-block" id="eq-loi-decomp"></div>
+
+        <p>
+          The two sets have vastly different cardinalities, so the raw totals are not comparable. The per-pair averages are:
+        </p>
+
+        <div class="math-block" id="eq-loi-means"></div>
+
+        <p>
+          This is a diagnostic no correlation-based measure &mdash; the Mantel test included &mdash; can provide. A scalar association statistic tells you the reconstruction is "good" or "poor"; it cannot tell you which of the two failure modes you are looking at.
+        </p>
+
+        <div class="module mt-6">
+          <div class="module-num" style="background: var(--amber-soft); color: var(--amber-dark);">out</div>
+          <div>
+            <h3 class="module-title">High mean out (&gt; 0.3) — the partition is too coarse</h3>
+            <p class="module-desc">The tree is separating pairs the ensemble considers similar. Grow more terminal nodes or relax the pruning constraints.</p>
+          </div>
+        </div>
+        <div class="module">
+          <div class="module-num" style="background: var(--amber-soft); color: var(--amber-dark);">in</div>
+          <div>
+            <h3 class="module-title">High mean in (&gt; 0.1) — the calibration is off</h3>
+            <p class="module-desc">Split boundaries are well placed, but within-node proximity values deviate from the ensemble's. Usually the inherent fuzzy-to-crisp transition.</p>
+          </div>
+        </div>
+        <div class="module">
+          <div class="module-num" style="background: #e4f3e8; color: #1c6b3c;">✓</div>
+          <div>
+            <h3 class="module-title">Both low — a faithful reconstruction</h3>
+            <p class="module-desc">The partition is well placed and the calibration is accurate. The explanations you read off the tree are the ensemble's, not the surrogate's.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="grid-column: span 5;" class="fade-in fade-in-delay-1">
+        <figure class="figure">
+          <img loading="lazy" decoding="async" src="images/README-unnamed-chunk-24-1.png" alt="eValidation output: ensemble and e2tree proximity matrices side by side, with the nLoI null distribution and its within/between decomposition">
           <figcaption class="figcaption">
-            <strong>Figure 8</strong> Local Observation Importance for the iris classification model. Each bar is one observation; colour encodes predicted class, height encodes local importance.
+            <strong>Figure 5</strong> Output of <code>plot()</code> on an <code>eValidation</code> object. Top: ensemble proximity <strong>O</strong> (left) against e2tree proximity <strong>Ô</strong> (right) &mdash; note the fuzzy background against the crisp blocks. Bottom: the observed nLoI against its permutation null distribution, and the within- versus between-node decomposition.
+          </figcaption>
+        </figure>
+
+        <div class="code-block mt-6" style="font-size: .8rem;">
+          <button class="copy-btn">Copy</button>
+<span class="comment"># Proximity matrices from the validation object</span>
+val   &lt;- <span class="fn">eValidation</span>(training, tree, D, n_perm = <span class="num">999</span>)
+prox  &lt;- <span class="fn">proximity</span>(val)
+
+<span class="comment"># Global nLoI + exact decomposition</span>
+res &lt;- <span class="fn">loi</span>(prox$ensemble, prox$e2tree)
+<span class="fn">summary</span>(res)   <span class="comment"># nloi, mean_in, mean_out</span>
+
+<span class="comment"># Is the reconstruction better than chance?</span>
+perm &lt;- <span class="fn">loi_perm</span>(prox$ensemble, prox$e2tree,
+                 n_perm = <span class="num">999</span>, seed = <span class="num">42</span>)</div>
+      </div>
+    </div>
+
+    <!-- LOCAL LoI -->
+    <div class="grid grid-12 mt-12" style="gap: 3rem; align-items: start;">
+      <div style="grid-column: span 7;" class="fade-in">
+        <span class="kicker">Local scale</span>
+        <h2 class="display-sm mt-4">
+          <em class="italic-display" style="font-weight:400">localLoI</em> — fidelity, one observation at a time.
+        </h2>
+        <p class="mt-6">
+          A single global number cannot tell you <em>which</em> explanations to trust. <code style="font-family:var(--font-mono);font-size:.88em;">localLoI()</code> disaggregates the nLoI down to each node and each observation. For observation <em>i</em>:
+        </p>
+
+        <div class="math-block" id="eq-localloi"></div>
+
+        <p>
+          A high <span class="math-inline" id="loi-ell"></span> flags an observation whose local explanation &mdash; its path, its neighbours, its attribution &mdash; is <em>less trustworthy</em>. Crucially, the per-observation values average back exactly to the published statistic, <span class="math-inline" id="loi-identity"></span>. Local LoI is an exact spatial decomposition, not a separate metric.
+        </p>
+        <p>
+          The leaf partition is recovered directly from the block structure of <strong>Ô</strong> &mdash; two observations share a leaf if and only if <span class="math-inline" id="loi-block"></span> &mdash; so the decomposition needs nothing but the two matrices.
+        </p>
+      </div>
+
+      <div style="grid-column: span 5;" class="fade-in fade-in-delay-1">
+        <figure class="figure">
+          <img loading="lazy" decoding="async" src="images/README-unnamed-chunk-27-1.png" alt="Permutation test for the nLoI: the observed statistic against its null distribution, and per-pair within- versus between-node loss">
+          <figcaption class="figcaption">
+            <strong>Figure 6</strong> Permutation test on the iris classification model. Left: the observed nLoI against its null distribution under simultaneous row/column permutation. Right: the per-pair averages &mdash; here a low within-node loss against a much larger between-node loss, the signature of a well-placed partition.
           </figcaption>
         </figure>
       </div>
@@ -356,7 +547,7 @@ tree_reg &lt;- <span class="fn">e2tree</span>(
 </section>
 
 <!-- CTA -->
-<section class="section-tight">
+<section class="section-tight" style="background: var(--paper-warm);">
   <div class="container-narrow text-center">
     <h2 class="display-md fade-in">
       Ready to <em class="italic-display" style="font-weight:400">explain</em> your ensemble?
@@ -387,6 +578,7 @@ tree_reg &lt;- <span class="fn">e2tree</span>(
         <ul>
           <li><a href="documentation.html#install">Install</a></li>
           <li><a href="documentation.html">Documentation</a></li>
+          <li><a href="news.html">Changelog</a></li>
           <li><a href="https://github.com/massimoaria/e2tree" target="_blank" rel="noopener">GitHub</a></li>
           <li><a href="https://cran.r-project.org/package=e2tree" target="_blank" rel="noopener">CRAN</a></li>
         </ul>
@@ -440,11 +632,34 @@ const mathMap = {
   // NMSE definition inline
   'sim-inline': String.raw`NMSE_{(t)_{ij}|b} = \dfrac{MSE_{(t)_{ij}|b}}{MSE_{\max}\cdot p(t)}`,
 
-  // LOI
-  'loi-i':    String.raw`i`,
-  'loi-j':    String.raw`j`,
-  'eq-loi':   String.raw`\mathrm{LOI}(i,j) = \mathrm{Imp}_j\!\left(\text{node}(i)\right) - \mathrm{Imp}_{-j}\!\left(\text{node}(i)\right)`,
-  'loi-desc': String.raw`\mathrm{Imp}_{-j}`,
+  // ---- nLoI (Aria, Gnasso & Iorio, submitted to CSDA) ----
+
+  // Raw LoI statistic (eq. 3)
+  'eq-loi': String.raw`\mathrm{LoI}(O, \hat{O}_T) = \sum_{i<j} \frac{\left(o_{ij} - \hat{o}_{ij}\right)^2}{\max\!\left(o_{ij},\, \hat{o}_{ij}\right)}`,
+
+  'loi-maxterm': String.raw`\max(o_{ij},\hat{o}_{ij})`,
+  'loi-M':       String.raw`M = n(n-1)/2`,
+
+  // Normalized LoI (Definition 1, eq. 4) with boundedness (eq. 5)
+  'eq-nloi': String.raw`\mathrm{nLoI}(O, \hat{O}_T) = \frac{1}{M} \sum_{i<j} \frac{\left(o_{ij} - \hat{o}_{ij}\right)^2}{\max\!\left(o_{ij},\, \hat{o}_{ij}\right)}, \qquad 0 \le \mathrm{nLoI} \le 1`,
+
+  'loi-lambda': String.raw`\lambda = -2`,
+
+  // Decomposition (Proposition 7, eq. 13)
+  'loi-pin':      String.raw`\mathcal{P}_{\mathrm{in}}`,
+  'loi-pout':     String.raw`\mathcal{P}_{\mathrm{out}}`,
+  'loi-ohat0':    String.raw`\hat{o}_{ij} = 0`,
+  'loi-collapse': String.raw`o_{ij}^2 / o_{ij} = o_{ij}`,
+  'eq-loi-decomp': String.raw`\mathrm{LoI} = \underbrace{\sum_{(i,j)\in\mathcal{P}_{\mathrm{in}}} \frac{(o_{ij}-\hat{o}_{ij})^2}{\max(o_{ij},\hat{o}_{ij})}}_{\mathrm{LoI}_{\mathrm{in}}} \;+\; \underbrace{\sum_{(i,j)\in\mathcal{P}_{\mathrm{out}}} o_{ij}}_{\mathrm{LoI}_{\mathrm{out}}}`,
+
+  // Per-pair averages (eq. 15)
+  'eq-loi-means': String.raw`\bar{\ell}_{\mathrm{in}} = \frac{\mathrm{LoI}_{\mathrm{in}}}{|\mathcal{P}_{\mathrm{in}}|}, \qquad \bar{\ell}_{\mathrm{out}} = \frac{\mathrm{LoI}_{\mathrm{out}}}{|\mathcal{P}_{\mathrm{out}}|}`,
+
+  // Local LoI
+  'eq-localloi':   String.raw`\ell_i = \frac{1}{n-1} \sum_{j \neq i} c_{ij}, \qquad c_{ij} = \frac{(o_{ij}-\hat{o}_{ij})^2}{\max(o_{ij},\hat{o}_{ij})}`,
+  'loi-ell':       String.raw`\ell_i`,
+  'loi-identity':  String.raw`\operatorname{mean}_i(\ell_i) = \mathrm{nLoI}`,
+  'loi-block':     String.raw`\hat{o}_{ij} > 0`,
 };
 Object.entries(mathMap).forEach(([id, tex]) => {
   const el = document.getElementById(id);
@@ -452,6 +667,60 @@ Object.entries(mathMap).forEach(([id, tex]) => {
   const isBlock = el.classList.contains('math-block');
   katex.render(tex, el, { displayMode: isBlock, throwOnError: false, trust: true });
 });
+
+// KaTeX lays out at its natural width and will spill out of (or scroll inside)
+// its container. Shrink the container font-size until the equation fits.
+// In display mode .katex is a block sized to its container, so its bounding rect
+// reports the container width — scrollWidth is what reveals the real content width.
+const MIN_MATH_SCALE = 0.5;
+
+function naturalWidth(el) {
+  const katexEl = el.querySelector('.katex');
+  if (!katexEl) return 0;
+  const inner = katexEl.querySelector('.katex-html') || katexEl;
+  return Math.max(
+    katexEl.scrollWidth,
+    inner.scrollWidth,
+    inner.getBoundingClientRect().width
+  );
+}
+
+function fitMath(el) {
+  el.style.fontSize = '';
+  if (!el.querySelector('.katex')) return;
+
+  const box = el.classList.contains('math-block') ? el : el.parentElement;
+  if (!box) return;
+  const bcs = getComputedStyle(box);
+  const avail = box.clientWidth
+    - parseFloat(bcs.paddingLeft || 0)
+    - parseFloat(bcs.paddingRight || 0);
+  if (avail <= 0) return;
+
+  const base = parseFloat(getComputedStyle(el).fontSize);
+  let scale = 1;
+
+  // Converge in a few passes: shrinking the font can change line metrics.
+  for (let pass = 0; pass < 4; pass++) {
+    const natural = naturalWidth(el);
+    if (natural <= avail - 1 || natural === 0) break;
+    scale = Math.max(MIN_MATH_SCALE, scale * (avail - 2) / natural);
+    el.style.fontSize = (base * scale) + 'px';
+    if (scale <= MIN_MATH_SCALE) break;
+  }
+}
+
+function fitAllMath() {
+  document.querySelectorAll('.math-block, .math-inline').forEach(fitMath);
+}
+
+fitAllMath();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAllMath);
+let mathResizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(mathResizeTimer);
+  mathResizeTimer = setTimeout(fitAllMath, 120);
+}, { passive: true });
 </script>
 <script src="js/main.js"></script>
 </body>

@@ -175,6 +175,10 @@ p.muted { color: var(--ink-muted); }
 .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .grid-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
 
+/* Grid items default to min-width:auto, which lets wide content (2100px figures,
+   nowrap tables, KaTeX) push the track past its track size. Opt out everywhere. */
+.grid > *, .hero-grid > *, .docs-layout > * { min-width: 0; }
+
 @media (max-width: 960px) {
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
   .grid-12 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -195,9 +199,11 @@ p.muted { color: var(--ink-muted); }
 .text-center { text-align: center; }
 
 .mt-0 { margin-top: 0; } .mt-2 { margin-top: .5rem; } .mt-4 { margin-top: 1rem; }
-.mt-6 { margin-top: 1.5rem; } .mt-8 { margin-top: 2rem; } .mt-12 { margin-top: 3rem; }
+.mt-6 { margin-top: 1.5rem; } .mt-8 { margin-top: 2rem; } .mt-10 { margin-top: 2.5rem; }
+.mt-12 { margin-top: 3rem; }
 .mb-0 { margin-bottom: 0; } .mb-2 { margin-bottom: .5rem; } .mb-4 { margin-bottom: 1rem; }
-.mb-6 { margin-bottom: 1.5rem; } .mb-8 { margin-bottom: 2rem; } .mb-12 { margin-bottom: 3rem; }
+.mb-6 { margin-bottom: 1.5rem; } .mb-8 { margin-bottom: 2rem; } .mb-10 { margin-bottom: 2.5rem; }
+.mb-12 { margin-bottom: 3rem; }
 
 section { padding: clamp(4rem, 8vw, 7rem) 0; position: relative; }
 .section-tight { padding: clamp(2.5rem, 5vw, 4rem) 0; }
@@ -497,7 +503,7 @@ section { padding: clamp(4rem, 8vw, 7rem) 0; position: relative; }
   overflow: hidden;
   background: var(--surface);
 }
-.figure img { cursor: zoom-in; transition: transform .4s var(--ease); }
+.figure img { width: 100%; cursor: zoom-in; transition: transform .4s var(--ease); }
 .figure img:hover { transform: scale(1.01); }
 .figcaption {
   padding: .9rem 1.25rem;
@@ -649,6 +655,7 @@ section { padding: clamp(4rem, 8vw, 7rem) 0; position: relative; }
   transition: all .2s;
 }
 .person-links a:hover { background: var(--e2-soft); color: var(--e2-deep); border-color: var(--e2-soft); }
+.person-links a.orcid-link:hover { background: #eaf5e4; color: #a6ce39; border-color: #cde3b8; }
 .person-links svg { width: 14px; height: 14px; }
 
 /* ===========================================================
@@ -764,6 +771,18 @@ section { padding: clamp(4rem, 8vw, 7rem) 0; position: relative; }
   transition: all .2s;
 }
 .demo-btn:hover, .demo-btn.active { background: var(--e2); border-color: var(--e2); color: #fff; }
+
+/* ===========================================================
+   BADGE ROW (CRAN / downloads / CI)
+   =========================================================== */
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
+}
+.badge-row a { display: inline-flex; line-height: 0; }
+.badge-row img { height: 20px; width: auto; border-radius: 3px; }
 
 /* ===========================================================
    VERSION TAG
@@ -1095,8 +1114,52 @@ body.lightbox-open { overflow: hidden; }
 .case-badge.amber { background: var(--amber-soft); color: var(--amber-dark); border-color: rgba(196,125,46,.3); }
 .case-badge.slate { background: #eee8f8; color: #4a2a80; border-color: rgba(100,60,180,.25); }
 
+/* Backend support table (methods page) */
+.table-wrap { overflow-x: auto; }
+.backend-table {
+  width: 100%;
+  min-width: 460px;
+  border-collapse: collapse;
+  font-size: .9rem;
+  background: var(--surface);
+  border: 1px solid var(--rule-soft);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.backend-table th {
+  text-align: left;
+  padding: .7rem 1rem;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  background: var(--paper-warm);
+  border-bottom: 2px solid var(--rule);
+}
+.backend-table td {
+  padding: .7rem 1rem;
+  border-bottom: 1px solid var(--rule-soft);
+  color: var(--ink-soft);
+}
+.backend-table tr:last-child td { border-bottom: none; }
+.backend-table tr:hover td { background: var(--e2-tint); }
+.backend-table td:first-child { font-weight: 700; color: var(--ink); }
+.backend-table code {
+  font-family: var(--font-mono);
+  font-size: .82em;
+  color: var(--e2-dark);
+  background: var(--e2-soft);
+  padding: .1em .4em;
+  border-radius: 4px;
+}
+
 /* Comparison table */
-.compare-table { width: 100%; border-collapse: collapse; font-size: .9rem; margin-top: 1.5rem; }
+.compare-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+}
+.compare-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: .9rem; margin-top: 1.5rem; }
 .compare-table th {
   text-align: left;
   padding: .7rem 1rem;
@@ -1181,8 +1244,11 @@ html, body { overflow-x: hidden; }
   height: auto;
 }
 
-/* ---- Grid-12 span overflow fix at tablet (960px) ---- */
-@media (max-width: 960px) {
+/* ---- Grid-12 span overflow fix at tablet ----
+   Scoped above 640px: below that the single-column rule must win, and these
+   attribute selectors would otherwise out-specify `.grid-12 > *` and span
+   6 implicit tracks. */
+@media (min-width: 641px) and (max-width: 960px) {
   .grid-12 > [style*="span 7"],
   .grid-12 > [style*="span 6"] { grid-column: span 6 !important; }
 }
@@ -1230,9 +1296,12 @@ html, body { overflow-x: hidden; }
   /* Force all grid-12 spans to full width */
   .grid-12 > * { grid-column: 1 / -1 !important; }
 
-  /* Hero stats: keep 2×2 */
+  /* Hero stats: keep 2×2. Default padding (1.75rem/side) eats a narrow column. */
   .hero-stats { grid-template-columns: 1fr 1fr; }
+  .stat       { padding: 1.1rem 1rem; }
   .stat-num   { font-size: clamp(1.6rem, 7vw, 2.4rem); }
+  .stat-label,
+  .stat-sub   { overflow-wrap: anywhere; }
 
   /* Person cards: stack avatar above text */
   .person { flex-direction: column; gap: .85rem; }
@@ -1272,6 +1341,22 @@ html, body { overflow-x: hidden; }
   /* Comparison table: smaller text */
   .compare-table th,
   .compare-table td { padding: .5rem .65rem; font-size: .8rem; }
+}
+
+/* ===========================================================
+   REDUCED MOTION
+   =========================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .fade-in { opacity: 1; transform: none; transition: none; }
+  .version-tag .dot,
+  .distill-arrow svg { animation: none; }
+  .tree-edge,
+  .mini-tree,
+  .e2tree-svg-wrap,
+  .figure img,
+  .card,
+  .btn { transition: none; }
 }
 
 /* ---- Small mobile (≤ 430px) ---- */

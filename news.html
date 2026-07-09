@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1f40">
+  <title>Changelog · e2tree — Release Notes</title>
+  <meta name="description" content="Release notes for the e2tree R package: new features, supported ensemble backends, performance improvements, and bug fixes across versions.">
+  <link rel="canonical" href="https://e2tree.agostinognasso.com/news.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="e2tree">
+  <meta property="og:title" content="Changelog · e2tree — Release Notes">
+  <meta property="og:description" content="Release notes for the e2tree R package: new features, supported ensemble backends, performance improvements, and bug fixes across versions.">
+  <meta property="og:url" content="https://e2tree.agostinognasso.com/news.html">
+  <meta property="og:image" content="https://e2tree.agostinognasso.com/images/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Changelog · e2tree — Release Notes">
+  <meta name="twitter:description" content="Release notes for the e2tree R package: new features, supported ensemble backends, performance improvements, and bug fixes across versions.">
+  <meta name="twitter:image" content="https://e2tree.agostinognasso.com/images/og-card.png">
+  <link rel="icon" type="image/png" href="images/e2tree_logo.png">
+  <link rel="apple-touch-icon" href="images/e2tree_logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .release {
+      position: relative;
+      padding: 0 0 3rem 2.25rem;
+      border-left: 2px solid var(--rule);
+    }
+    .release:last-of-type { border-left-color: transparent; padding-bottom: 0; }
+    .release::before {
+      content: "";
+      position: absolute;
+      left: -8px;
+      top: .35rem;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--paper);
+      border: 3px solid var(--e2-dark);
+    }
+    .release.current::before { background: var(--e2-dark); box-shadow: 0 0 0 5px var(--e2-soft); }
+    .release-header { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+    .release-version {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 2.5vw, 2rem);
+      font-weight: 600;
+      font-variation-settings: "opsz" 48, "SOFT" 40;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+    .release-group { margin-top: 1.5rem; }
+    .release-group h3 {
+      font-family: var(--font-body);
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--e2-dark);
+      margin-bottom: .5rem;
+    }
+    .release ul { list-style: none; padding: 0; margin: 0; }
+    .release li {
+      padding: .5rem 0;
+      border-top: 1px solid var(--rule-soft);
+      font-size: .92rem;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+    .release li:last-child { border-bottom: 1px solid var(--rule-soft); }
+    .release code {
+      font-family: var(--font-mono);
+      font-size: .85em;
+      background: var(--e2-soft);
+      padding: .08em .35em;
+      border-radius: 4px;
+      color: var(--e2-deep);
+    }
+  </style>
+</head>
+<body>
+
+<nav class="site-nav" aria-label="Primary">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <img src="images/e2tree_logo.png" alt="e2tree logo">
+      <span class="wordmark">e2tree<sup>1.2.0</sup></span>
+    </a>
+    <div class="nav-links">
+      <a href="methods.html">Methods</a>
+      <a href="usecases.html">Use cases</a>
+      <a href="documentation.html">Docs</a>
+      <a href="about.html">About</a>
+    </div>
+    <a href="documentation.html#install" class="nav-cta">
+      Install
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+    </a>
+    <button class="nav-burger" aria-label="Open menu" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+  <div class="mobile-menu" style="display:none">
+    <a href="methods.html">Methods</a>
+    <a href="usecases.html">Use cases</a>
+    <a href="documentation.html">Docs</a>
+    <a href="about.html">About</a>
+    <a href="documentation.html#install">Install</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" style="padding-bottom: 2rem;">
+  <div class="container-narrow">
+    <span class="kicker fade-in">Changelog</span>
+    <h1 class="display-lg mt-4 fade-in">
+      Release <em class="italic-display" style="font-weight:400">notes</em>.
+    </h1>
+    <p class="lede mt-4 fade-in fade-in-delay-1" style="max-width: 36em;">
+      What's new in each e2tree release. Condensed from the package
+      <a href="https://github.com/massimoaria/e2tree/blob/master/NEWS.md" target="_blank" rel="noopener" style="text-decoration: underline; text-decoration-color: rgba(74,111,165,.35);">NEWS.md</a> on GitHub.
+    </p>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section style="padding-top: 2rem;">
+  <div class="container-narrow">
+
+    <!-- development version -->
+    <div class="release current fade-in">
+      <div class="release-header">
+        <span class="release-version">1.2.0.9000</span>
+        <span class="paper-badge" style="background: var(--e2-soft); color: var(--e2-deep); border-color: rgba(74,111,165,.25);">Development · on GitHub</span>
+      </div>
+      <p class="small mt-2" style="max-width: 46em;">
+        Install with <code style="font-family:var(--font-mono);background:var(--e2-soft);padding:.08em .35em;border-radius:4px;">remotes::install_github("agostinognasso/e2tree")</code>.
+      </p>
+
+      <div class="release-group">
+        <h3>Local explainability layer</h3>
+        <ul>
+          <li>e2tree is <strong>interpretive, not predictive</strong>: it reconstructs the grouping geometry a trained ensemble induces, and its quality is fidelity to that ensemble, never predictive accuracy. This release brings that lens down to the local scale. All functions are backend-agnostic.</li>
+          <li><code>explain()</code>: a single per-instance entry point composing routing, additive attribution, ensemble neighbours, region fidelity, outcome dispersion — and, on request, counterfactuals and stability — into one coherent narrative object.</li>
+          <li><code>localLoI()</code>: disaggregates the global nLoI into per-node and per-observation fidelity, so you can see <em>where</em> the reconstruction is reliable. <code>mean(obs$loi)</code> reproduces <code>nLoI</code> exactly.</li>
+          <li><code>eContribution()</code>: exactly additive per-instance Saabas-style attribution of the reconstructed value, per class for classification.</li>
+          <li><code>eNeighbors()</code>: case-based explanation returning the nearest training cases by the ensemble's own leaf co-occurrence proximity, plus leaf prototypes.</li>
+          <li><code>eHeterogeneity()</code>: descriptive per-region outcome dispersion — entropy and prediction set for classification, central band and sd for regression.</li>
+          <li><code>nodeStats()</code> and <code>plotNodeComparison()</code>: full profile of any node (decision rule, per-predictor node-vs-rest statistics via Cohen's d and Cramér's V, response distribution), and side-by-side comparison of two nodes.</li>
+        </ul>
+      </div>
+
+      <div class="release-group">
+        <h3>Advanced local explanation</h3>
+        <ul>
+          <li><code>eCounterfactual()</code>: proximity-native contrastive explanation. Reports the smallest feature change that would move an instance into a different region, and <strong>verifies it against the ensemble's own grouping geometry</strong> — <code>validated</code> is TRUE only when the forest actually regroups the counterfactual. This is what distinguishes it from surrogate-only counterfactuals, which can flip the approximating tree without convincing the ensemble.</li>
+          <li><code>eStability()</code>: confidence and stability of a local explanation via bootstrap over the ensemble's trees, yielding a per-instance confidence, a neighbour-stability score, and an interval on the reconstructed outcome. Fills the usual XAI gap of point estimates with no uncertainty.</li>
+        </ul>
+      </div>
+
+      <div class="release-group">
+        <h3>Panel (longitudinal) data</h3>
+        <ul>
+          <li><code>panel_e2tree()</code>: explains an ensemble fitted to panel (unit × time) data by decomposing the feature representation à la Mundlak (1978) into a <strong>between</strong> (unit-mean) and a <strong>within</strong> (unit-demeaned) component, growing a separate e2tree surrogate for each. On panels with high intraclass correlation a single pooled e2tree conflates the two sources and the within signal is crowded out.</li>
+          <li><code>target = "pooled"</code> explains a given pooled ensemble; <code>within = "twoway"</code> adds two-way demeaning with common period effects; <code>na.action = "unit.available"</code> reduces bias in unbalanced panels.</li>
+          <li>New <code>panel_health</code> dataset: a simulated country × year panel (30 countries, 2004–2019) of life-expectancy determinants with known between and within drivers and high ICC (≈ 0.96).</li>
+        </ul>
+      </div>
+
+      <div class="release-group">
+        <h3>Fidelity semantics and performance</h3>
+        <ul>
+          <li>Full-ensemble predictions are now the default for fidelity computations; out-of-bag predictions remain available via <code>oob = TRUE</code>. A length check catches silent misalignment.</li>
+          <li><strong>Quantile binning of split thresholds</strong>: numeric predictors with more unique values than <code>max_thresholds</code> (default 256) contribute at most that many quantile-based candidate splits, bounding the split matrix at O(n · max_thresholds) per feature instead of O(n²) on continuous data.</li>
+          <li><code>predict.e2tree()</code> (regression) attaches node-level <code>sd</code> via the terminal-node id, fixing wrong values when two leaves share the same prediction.</li>
+          <li><code>Wtest()</code> now respects its <code>p.value</code> argument, which was hard-coded to 0.05.</li>
+        </ul>
+      </div>
+
+      <div class="release-group">
+        <h3>Robustness fixes</h3>
+        <ul>
+          <li><strong>LightGBM feature-name sanitisation</strong>: LightGBM rewrites any character outside <code>[A-Za-z0-9_]</code> in feature names, so models whose predictors contained spaces or special characters broke leaf extraction. The adapter now resolves the model's feature names against <code>data</code> (exact match first, sanitised match as fallback) and errors clearly on ambiguity.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 1.2.0 -->
+    <div class="release fade-in">
+      <div class="release-header">
+        <span class="release-version">1.2.0</span>
+        <span class="paper-badge">Current · on CRAN</span>
+        <span class="small">May 2026</span>
+      </div>
+
+      <div class="release-group">
+        <h3>Multi-backend support</h3>
+        <ul>
+          <li>Hardened adapters for ensembles trained with <code>xgboost</code> (including 3.x), <code>gbm</code>, <code>lightgbm</code>, and <code>catboost</code> — alongside the original <code>randomForest</code> and <code>ranger</code> backends.</li>
+          <li><code>createDisMatrix()</code> now validates adapter output via <code>validate_terminal_nodes()</code>, rejecting malformed terminal-node matrices with an informative error.</li>
+          <li>Dissimilarity matrices carry an <code>ensemble_backend</code> tag; <code>e2tree()</code> and <code>as.rpart()</code> warn when a stale <code>D</code> is reused with a different model.</li>
+          <li>CatBoost robustness: multi-class leaf extraction, loss-function parsing across catboost releases, and compatibility with both <code>catboost.CatBoost</code> and <code>catboost.Model</code> classes.</li>
+        </ul>
+      </div>
+
+      <div class="release-group">
+        <h3>S3 class system overhaul</h3>
+        <ul>
+          <li>New S3 methods for <code>e2tree</code> objects: <code>predict()</code>, <code>fitted()</code>, <code>residuals()</code> — <code>predict.e2tree()</code> replaces <code>ePredTree()</code> as the standard prediction interface.</li>
+          <li>New accessors: <code>nodes()</code>, <code>e2splits()</code>, <code>measures()</code>, <code>proximity()</code>.</li>
+          <li>New coercion methods: <code>as.rpart()</code> and <code>as.party()</code> (partykit <code>constparty</code>, with proper bar plots in terminal nodes).</li>
+        </ul>
+      </div>
+
+      <div class="release-group">
+        <h3>Validation &amp; importance</h3>
+        <ul>
+          <li><code>eValidation()</code> gains a <code>test</code> argument: <code>"mantel"</code>, <code>"measures"</code>, or <code>"both"</code>.</li>
+          <li><code>vimp()</code> auto-detects classification vs regression; importance bars sorted; consistent column naming.</li>
+          <li><code>moda()</code> accepts non-factor responses (integer 0/1 targets typical of <code>gbm</code> Bernoulli models).</li>
+        </ul>
+      </div>
+
+      <div class="release-group">
+        <h3>Documentation</h3>
+        <ul>
+          <li>New vignette <em>e2tree-introduction</em> covering classification, regression, validation, and comparison with partykit/stablelearner.</li>
+          <li>New vignette <em>models</em> with worked examples for every supported backend.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 1.0.0 -->
+    <div class="release fade-in">
+      <div class="release-header">
+        <span class="release-version">1.0.0</span>
+        <span class="small">2025</span>
+      </div>
+
+      <div class="release-group">
+        <h3>New functions</h3>
+        <ul>
+          <li><code>goi()</code>, <code>goi_perm()</code>, <code>goi_analysis()</code>: the Goodness of Interpretability index — how well the e2tree-estimated proximity matrix reconstructs the ensemble's — with permutation-based significance testing. <em>Since superseded by <code>loi()</code> / <code>loi_perm()</code>, the normalized Loss of Interpretability.</em></li>
+          <li>Interactive visualization: <code>plot_e2tree_vis()</code> (draggable <em>visNetwork</em> trees), <code>plot_e2tree_click()</code> (click-to-inspect nodes), <code>save_e2tree_html()</code> (standalone HTML export).</li>
+        </ul>
+      </div>
+
+      <div class="release-group">
+        <h3>Performance</h3>
+        <ul>
+          <li><code>createDisMatrix()</code> co-occurrence computation moved to C++ with OpenMP thread-level parallelism.</li>
+          <li>Prediction rules pre-parsed once, eliminating repeated regex/<code>eval(parse())</code> calls; vectorized splitting and impurity computation.</li>
+        </ul>
+      </div>
+
+      <div class="release-group">
+        <h3>Bug fixes</h3>
+        <ul>
+          <li>Fixed Rcpp type conversion for <code>ranger</code> compatibility.</li>
+          <li>Fixed regression predictions returned as character instead of double.</li>
+          <li>Fixed a <code>dplyr</code> namespace conflict and missing NAMESPACE imports.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 0.2.0 -->
+    <div class="release fade-in">
+      <div class="release-header">
+        <span class="release-version">0.2.0</span>
+        <span class="small">2024</span>
+      </div>
+      <div class="release-group">
+        <ul>
+          <li>Added support for <code>ranger</code> models.</li>
+          <li>Several improvements to e2tree plots.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 0.1.x -->
+    <div class="release fade-in">
+      <div class="release-header">
+        <span class="release-version">0.1.x</span>
+        <span class="small">2023</span>
+      </div>
+      <div class="release-group">
+        <ul>
+          <li>First public releases on CRAN: core algorithm for classification with <code>randomForest</code> ensembles.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section-tight" style="background: var(--paper-warm);">
+  <div class="container-narrow text-center">
+    <h2 class="display-sm fade-in">Get the latest version.</h2>
+    <div class="flex gap-4 justify-center mt-6 fade-in fade-in-delay-1" style="flex-wrap: wrap;">
+      <a href="documentation.html#install" class="btn btn-primary">
+        Install e2tree
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+      </a>
+      <a href="https://github.com/massimoaria/e2tree/blob/master/NEWS.md" target="_blank" rel="noopener" class="btn btn-ghost">
+        Full NEWS.md on GitHub
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="wordmark">e2tree</div>
+        <p class="footer-tagline">Explainable Ensemble Trees for R.<br>MIT license · Available on CRAN.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Package</h4>
+        <ul>
+          <li><a href="documentation.html#install">Install</a></li>
+          <li><a href="documentation.html">Documentation</a></li>
+          <li><a href="news.html">Changelog</a></li>
+          <li><a href="https://github.com/massimoaria/e2tree" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://cran.r-project.org/package=e2tree" target="_blank" rel="noopener">CRAN</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Learn</h4>
+        <ul>
+          <li><a href="methods.html">Methods</a></li>
+          <li><a href="usecases.html">Use cases</a></li>
+          <li><a href="documentation.html#quickstart">Quick start</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <ul>
+          <li><a href="about.html">Team</a></li>
+          <li><a href="about.html#papers">Publications</a></li>
+          <li><a href="about.html#affiliations">Affiliations</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Agostino Gnasso. MIT License.</span>
+      <span>University of Naples Federico II · K-Synth</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

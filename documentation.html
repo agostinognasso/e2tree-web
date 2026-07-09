@@ -5,8 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0d1f40">
   <title>Documentation · e2tree — Explainable Ensemble Trees</title>
-  <meta name="description" content="Install, configure, and use e2tree: full API reference covering createDisMatrix, e2tree, eValidation, loi, vimp, and S3 methods.">
+  <meta name="description" content="Install, configure, and use e2tree: full API reference covering createDisMatrix, e2tree, eValidation, the nLoI fidelity measures, the local explainability layer, and panel_e2tree.">
+  <link rel="canonical" href="https://e2tree.agostinognasso.com/documentation.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="e2tree">
+  <meta property="og:title" content="Documentation · e2tree — API Reference & Usage Guide">
+  <meta property="og:description" content="Install, configure, and use e2tree: full API reference covering createDisMatrix, e2tree, eValidation, the nLoI fidelity measures, the local explainability layer, and panel_e2tree.">
+  <meta property="og:url" content="https://e2tree.agostinognasso.com/documentation.html">
+  <meta property="og:image" content="https://e2tree.agostinognasso.com/images/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Documentation · e2tree — API Reference & Usage Guide">
+  <meta name="twitter:description" content="Install, configure, and use e2tree: full API reference covering createDisMatrix, e2tree, eValidation, the nLoI fidelity measures, the local explainability layer, and panel_e2tree.">
+  <meta name="twitter:image" content="https://e2tree.agostinognasso.com/images/og-card.png">
   <link rel="icon" type="image/png" href="images/e2tree_logo.png">
+  <link rel="apple-touch-icon" href="images/e2tree_logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -93,6 +107,9 @@
     .param-table td { padding: .6rem .75rem; border-bottom: 1px solid var(--rule-soft); color: var(--ink-soft); vertical-align: top; }
     .param-table td:first-child { font-family: var(--font-mono); font-size: .82rem; color: var(--e2-dark); white-space: nowrap; }
     .param-table tr:last-child td { border-bottom: none; }
+    /* First column is nowrap, so the table can exceed its container: let it scroll. */
+    .table-wrap { overflow-x: auto; margin-top: 1.5rem; }
+    .docs-content, .docs-sidebar { min-width: 0; }
   </style>
 </head>
 <body>
@@ -155,7 +172,17 @@
         <li><a href="#api-predict">predict()</a></li>
         <li><a href="#api-eValidation">eValidation()</a></li>
         <li><a href="#api-vimp">vimp()</a></li>
-        <li><a href="#api-loi">loi()</a></li>
+
+        <span class="nav-section">Fidelity (nLoI)</span>
+        <li><a href="#api-loi">loi() / loi_perm()</a></li>
+        <li><a href="#api-localLoI">localLoI()</a></li>
+
+        <span class="nav-section">Local explainability</span>
+        <li><a href="#api-explain">explain()</a></li>
+        <li><a href="#api-local-fns">The components</a></li>
+
+        <span class="nav-section">Panel data</span>
+        <li><a href="#api-panel">panel_e2tree()</a></li>
 
         <span class="nav-section">S3 methods</span>
         <li><a href="#s3-methods">print / summary / plot</a></li>
@@ -177,11 +204,40 @@
 <span class="comment"># Stable release from CRAN</span>
 <span class="fn">install.packages</span>(<span class="str">"e2tree"</span>)
 
-<span class="comment"># Development version from GitHub</span>
+<span class="comment"># Stable version from GitHub</span>
 <span class="fn">install.packages</span>(<span class="str">"remotes"</span>)
-remotes::<span class="fn">install_github</span>(<span class="str">"massimoaria/e2tree"</span>)</div>
+remotes::<span class="fn">install_github</span>(<span class="str">"massimoaria/e2tree"</span>)
+
+<span class="comment"># Development version from GitHub</span>
+remotes::<span class="fn">install_github</span>(<span class="str">"agostinognasso/e2tree"</span>)</div>
 
         <p class="mt-6">Dependencies installed automatically: <code style="font-family:var(--font-mono);font-size:.88em;">Rcpp</code>, <code style="font-family:var(--font-mono);font-size:.88em;">dplyr</code>. Recommended: <code style="font-family:var(--font-mono);font-size:.88em;">randomForest</code> or <code style="font-family:var(--font-mono);font-size:.88em;">ranger</code>, <code style="font-family:var(--font-mono);font-size:.88em;">rpart.plot</code>, <code style="font-family:var(--font-mono);font-size:.88em;">partykit</code>.</p>
+
+        <!-- TRY IN BROWSER -->
+        <div class="card mt-6" style="background: var(--e2-tint); border-color: var(--e2-soft);">
+          <div class="flex justify-between items-start" style="flex-wrap: wrap; gap: 1rem;">
+            <div style="max-width: 32em;">
+              <h3 style="font-family: var(--font-body); font-size: 1rem; font-weight: 700; margin-bottom: .4rem;">No install? Try it in your browser.</h3>
+              <p style="font-size: .9rem; margin: 0;">e2tree ships as a WebAssembly build for <a href="https://webr.r-wasm.org/latest/" target="_blank" rel="noopener" style="text-decoration: underline; text-decoration-color: rgba(74,111,165,.35);">webR</a> — R running entirely in your browser, nothing to install. Open the REPL and paste:</p>
+            </div>
+            <a href="https://webr.r-wasm.org/latest/" target="_blank" rel="noopener" class="btn btn-primary" style="padding: .6rem 1.2rem; font-size: .85rem;">
+              Open webR REPL
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+            </a>
+          </div>
+          <div class="code-block mt-4" style="font-size: .8rem; padding: 1.1rem 1.4rem;">
+            <button class="copy-btn">Copy</button>
+webr::<span class="fn">install</span>(<span class="fn">c</span>(<span class="str">"e2tree"</span>, <span class="str">"randomForest"</span>))
+<span class="kw">library</span>(e2tree)
+<span class="kw">library</span>(randomForest)
+
+ensemble &lt;- <span class="fn">randomForest</span>(Species ~ ., data = iris, proximity = <span class="kw">TRUE</span>)
+D    &lt;- <span class="fn">createDisMatrix</span>(ensemble, data = iris, label = <span class="str">"Species"</span>,
+                        parallel = <span class="fn">list</span>(active = <span class="kw">FALSE</span>))
+tree &lt;- <span class="fn">e2tree</span>(Species ~ ., iris, D, ensemble)
+<span class="fn">print</span>(tree)</div>
+          <p class="small mt-4" style="margin-bottom: 0;">Note: the webR build can lag behind the CRAN release by a version.</p>
+        </div>
       </section>
 
       <!-- QUICK START -->
@@ -225,34 +281,51 @@ setting &lt;- <span class="fn">list</span>(
 )
 tree &lt;- <span class="fn">e2tree</span>(Species ~ ., training, D, ensemble, setting)
 
-<span class="comment"># 5. Predict, validate, explain</span>
+<span class="comment"># 5. Predict, measure fidelity, explain</span>
 pred &lt;- <span class="fn">predict</span>(tree, newdata = validation)
-ev   &lt;- <span class="fn">eValidation</span>(tree, D, ensemble)
+val  &lt;- <span class="fn">eValidation</span>(training, tree, D, n_perm = <span class="num">999</span>)
 vi   &lt;- <span class="fn">vimp</span>(tree, data = training)
-<span class="fn">plot</span>(tree, ensemble = ensemble)</div>
+<span class="fn">plot</span>(tree, ensemble = ensemble)
+
+<span class="comment"># How faithfully does the tree reconstruct the ensemble?</span>
+prox &lt;- <span class="fn">proximity</span>(val)
+<span class="fn">summary</span>(<span class="fn">loi</span>(prox$ensemble, prox$e2tree))
+
+<span class="comment"># Explain a single case, in the ensemble's own terms</span>
+<span class="fn">explain</span>(tree, ensemble, newdata = validation[<span class="num">1</span>, ])</div>
       </section>
 
       <!-- API: createDisMatrix -->
       <section id="api-createDisMatrix" style="padding: 2.5rem 0;">
         <div class="api-entry">
           <span class="api-fn-name">createDisMatrix()</span>
-          <p>Derives the co-occurrence dissimilarity matrix from the Random Forest. Performance-critical computation is implemented in C++ via Rcpp; supports optional parallel execution.</p>
+          <p>Derives the co-occurrence dissimilarity matrix from any supported tree ensemble. Performance-critical computation runs in C++ via Rcpp with OpenMP; supports parallel execution and chunked computation for large samples.</p>
           <div class="api-sig">createDisMatrix(
   ensemble,
   data,
   label,
-  parallel = list(active = FALSE, no_cores = NULL)
+  parallel     = list(active = FALSE, no_cores = 1),
+  verbose      = FALSE,
+  chunk_size   = NULL,
+  memory_limit = NULL,
+  use_disk     = FALSE
 )</div>
+          <div class="table-wrap">
           <table class="param-table">
             <thead><tr><th>Argument</th><th>Type</th><th>Description</th></tr></thead>
             <tbody>
-              <tr><td>ensemble</td><td>rf / ranger</td><td>A fitted Random Forest model. Supports objects from <em>randomForest</em> and <em>ranger</em>.</td></tr>
+              <tr><td>ensemble</td><td>ensemble</td><td>A fitted tree ensemble: <code>randomForest</code>, <code>ranger</code>, <code>xgb.Booster</code>, <code>lgb.Booster</code>, <code>gbm</code>, or <code>catboost.Model</code>.</td></tr>
               <tr><td>data</td><td>data.frame</td><td>The training dataset used to fit the ensemble.</td></tr>
               <tr><td>label</td><td>character</td><td>Name of the response variable column.</td></tr>
-              <tr><td>parallel</td><td>list</td><td><code>active</code>: logical; enable parallel computation. <code>no_cores</code>: number of cores (NULL = auto-detect).</td></tr>
+              <tr><td>parallel</td><td>list</td><td><code>active</code>: logical; enable parallel computation. <code>no_cores</code>: number of cores.</td></tr>
+              <tr><td>chunk_size</td><td>integer</td><td>When smaller than the sample size, computes D in chunks to bound memory. <code>use_disk = TRUE</code> persists the result.</td></tr>
             </tbody>
           </table>
-          <p class="small mt-4"><strong>Returns:</strong> A symmetric numeric matrix of dimensions n × n with values in [0, 1]. Zero diagonal. Can be passed directly to <code style="font-family:var(--font-mono);font-size:.88em;">e2tree()</code>.</p>
+          </div>
+          <p class="small mt-4"><strong>Returns:</strong> A symmetric numeric matrix of dimensions n × n with values in [0, 1] and zero diagonal, carrying an <code style="font-family:var(--font-mono);font-size:.88em;">ensemble_backend</code> attribute. Reusing a stale <code>D</code> with a different model raises a warning rather than producing a silent bug.</p>
+          <p class="small mt-4" style="padding: .9rem 1.1rem; background: var(--amber-tint); border: 1px solid rgba(196,125,46,.2); border-radius: 8px;">
+            <strong style="color: var(--amber-dark);">Interpretation note (bagging vs boosting).</strong> The dissimilarity scale differs systematically between backend families. Compare fidelity values within a backend, not across them.
+          </p>
         </div>
 
         <!-- API: e2tree -->
@@ -266,6 +339,7 @@ vi   &lt;- <span class="fn">vimp</span>(tree, data = training)
   ensemble,
   setting = list(impTotal = 0.1, maxDec = 0.01, n = 2, level = 5)
 )</div>
+          <div class="table-wrap">
           <table class="param-table">
             <thead><tr><th>Argument</th><th>Type</th><th>Description</th></tr></thead>
             <tbody>
@@ -276,6 +350,7 @@ vi   &lt;- <span class="fn">vimp</span>(tree, data = training)
               <tr><td>setting</td><td>list</td><td>Stopping rules: <code>impTotal</code> (min impurity), <code>maxDec</code> (min decrease), <code>n</code> (min observations), <code>level</code> (max depth).</td></tr>
             </tbody>
           </table>
+          </div>
         </div>
 
         <!-- API: predict -->
@@ -284,6 +359,7 @@ vi   &lt;- <span class="fn">vimp</span>(tree, data = training)
           <p>Predicts responses for new observations by routing them through the e2tree's split rules.</p>
           <div class="api-sig">## S3 method for class 'e2tree'
 predict(object, newdata, ...)</div>
+          <div class="table-wrap">
           <table class="param-table">
             <thead><tr><th>Argument</th><th>Type</th><th>Description</th></tr></thead>
             <tbody>
@@ -291,34 +367,143 @@ predict(object, newdata, ...)</div>
               <tr><td>newdata</td><td>data.frame</td><td>New data to predict. Must contain the same predictor columns.</td></tr>
             </tbody>
           </table>
+          </div>
           <p class="small mt-4">Also available: <code style="font-family:var(--font-mono);font-size:.88em;">fitted(object)</code> returns training predictions, <code style="font-family:var(--font-mono);font-size:.88em;">residuals(object)</code> returns training residuals.</p>
         </div>
 
         <!-- API: eValidation -->
         <div class="api-entry" id="api-eValidation">
           <span class="api-fn-name">eValidation()</span>
-          <p>Assesses structural fidelity between the e2tree and the original ensemble by comparing their proximity matrices.</p>
-          <div class="api-sig">eValidation(tree, D, ensemble)</div>
-          <p class="small mt-4"><strong>Returns:</strong> An <code style="font-family:var(--font-mono);font-size:.88em;">eValidation</code> object. Use <code style="font-family:var(--font-mono);font-size:.88em;">measures()</code> for concordance metrics, <code style="font-family:var(--font-mono);font-size:.88em;">proximity()</code> for the heatmap matrix, and <code style="font-family:var(--font-mono);font-size:.88em;">plot()</code> for visualisation.</p>
+          <p>Assesses reconstruction quality by comparing the ensemble proximity matrix with the one induced by the e2tree, using the nLoI plus four complementary divergence and similarity measures, each with a permutation test.</p>
+          <div class="api-sig">eValidation(
+  data,
+  fit,
+  D,
+  test       = c("both", "mantel", "measures"),
+  graph      = TRUE,
+  n_perm     = 999,
+  conf.level = 0.95,
+  seed       = NULL
+)</div>
+          <div class="table-wrap">
+          <table class="param-table">
+            <thead><tr><th>Argument</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td>data</td><td>data.frame</td><td>The data frame containing the variables in the model.</td></tr>
+              <tr><td>fit</td><td>e2tree</td><td>A fitted e2tree object.</td></tr>
+              <tr><td>D</td><td>matrix</td><td>Dissimilarity matrix from <code>createDisMatrix()</code>.</td></tr>
+              <tr><td>test</td><td>character</td><td><code>"measures"</code> runs the divergence measures with permutation tests (agreement); <code>"mantel"</code> runs the Mantel test only (association); <code>"both"</code> is the default.</td></tr>
+              <tr><td>n_perm</td><td>integer</td><td>Permutations for the measure tests. <code>0</code> skips permutation testing.</td></tr>
+            </tbody>
+          </table>
+          </div>
+          <p class="small mt-4"><strong>Returns:</strong> An <code style="font-family:var(--font-mono);font-size:.88em;">eValidation</code> object holding both proximity matrices, the <code style="font-family:var(--font-mono);font-size:.88em;">loi</code> object with its decomposition, and a data frame of all measures (nLoI, Hellinger, wRMSE, RV, SSIM). Use <code style="font-family:var(--font-mono);font-size:.88em;">measures()</code>, <code style="font-family:var(--font-mono);font-size:.88em;">proximity()</code>, and <code style="font-family:var(--font-mono);font-size:.88em;">plot()</code>.</p>
         </div>
 
         <!-- API: vimp -->
         <div class="api-entry" id="api-vimp">
           <span class="api-fn-name">vimp()</span>
-          <p>Computes global variable importance from the e2tree's split structure, weighted by the impurity decrease at each split.</p>
-          <div class="api-sig">vimp(tree, data)</div>
-          <p class="small mt-4"><strong>Returns:</strong> A list with <code style="font-family:var(--font-mono);font-size:.88em;">$vimp</code> (numeric named vector) and <code style="font-family:var(--font-mono);font-size:.88em;">$g_imp</code> (a ggplot2 importance plot).</p>
+          <p>Computes global variable importance from the e2tree's split structure, weighted by the impurity decrease at each split. Classification or regression is auto-detected from the fitted object.</p>
+          <div class="api-sig">vimp(fit, data, type = NULL)</div>
+          <p class="small mt-4"><strong>Returns:</strong> A list with the importance table (<code style="font-family:var(--font-mono);font-size:.88em;">Variable</code>, <code style="font-family:var(--font-mono);font-size:.88em;">MeanImpurityDecrease</code>) and <code style="font-family:var(--font-mono);font-size:.88em;">$g_imp</code>, a ggplot2 importance plot.</p>
         </div>
 
         <!-- API: loi -->
         <div class="api-entry" id="api-loi">
           <span class="api-fn-name">loi()</span>
-          <p>Computes Local Observation Importance — observation-level attribution scores indicating which observations most strongly drive each split.</p>
-          <div class="api-sig">loi(tree, ensemble, data, label)
+          <p>
+            <strong>Loss of Interpretability.</strong> A scale-sensitive divergence measuring how faithfully the e2tree reconstructs the ensemble's co-occurrence structure — <em>agreement</em>, not association. Normalized by the pair count it yields the <strong>nLoI</strong>, bounded in [0,&nbsp;1], zero if and only if the reconstruction is exact.
+          </p>
+          <div class="api-sig">loi(O, O_hat, normalize = TRUE)
 
-## Permutation-based significance testing
-loi_perm(tree, ensemble, data, label, B = 100)</div>
-          <p class="small mt-4"><strong>Returns:</strong> An <code style="font-family:var(--font-mono);font-size:.88em;">loi</code> (or <code style="font-family:var(--font-mono);font-size:.88em;">loi_perm</code>) object with <code style="font-family:var(--font-mono);font-size:.88em;">print()</code>, <code style="font-family:var(--font-mono);font-size:.88em;">summary()</code>, and <code style="font-family:var(--font-mono);font-size:.88em;">plot()</code> methods.</p>
+## Permutation test under simultaneous row/column permutation
+loi_perm(O, O_hat, n_perm = 999, conf.level = 0.95, seed = NULL)</div>
+          <div class="table-wrap">
+          <table class="param-table">
+            <thead><tr><th>Argument</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td>O</td><td>matrix</td><td>Ensemble proximity matrix (n × n), values in [0, 1]. Typically <code>proximity(eValidation(...))$ensemble</code>.</td></tr>
+              <tr><td>O_hat</td><td>matrix</td><td>e2tree-induced proximity matrix (n × n). Crisp and block-diagonal: zero for every separated pair.</td></tr>
+              <tr><td>normalize</td><td>logical</td><td><code>TRUE</code> (default) returns the nLoI, divided by M = n(n−1)/2; <code>FALSE</code> returns the raw LoI.</td></tr>
+            </tbody>
+          </table>
+          </div>
+          <p class="small mt-4"><strong>Returns:</strong> An object of class <code style="font-family:var(--font-mono);font-size:.88em;">loi</code> carrying the exact decomposition — <code style="font-family:var(--font-mono);font-size:.88em;">loi_in</code> / <code style="font-family:var(--font-mono);font-size:.88em;">loi_out</code> and their per-pair averages <code style="font-family:var(--font-mono);font-size:.88em;">mean_in</code> / <code style="font-family:var(--font-mono);font-size:.88em;">mean_out</code>, which are directly comparable. A high <code>mean_out</code> (&gt; 0.3) means the partition is too coarse; a high <code>mean_in</code> (&gt; 0.1) means poor within-node calibration.</p>
+        </div>
+
+        <!-- API: localLoI -->
+        <div class="api-entry" id="api-localLoI">
+          <span class="api-fn-name">localLoI()</span>
+          <p>Disaggregates the global nLoI into a per-node and per-observation component, so you can see <em>where</em> the reconstruction is reliable. A high per-observation value flags a case whose local explanation is less trustworthy.</p>
+          <div class="api-sig">localLoI(O, O_hat, fit = NULL)</div>
+          <p class="small mt-4"><strong>Returns:</strong> An object of class <code style="font-family:var(--font-mono);font-size:.88em;">localLoI</code> with an <code style="font-family:var(--font-mono);font-size:.88em;">obs</code> and a <code style="font-family:var(--font-mono);font-size:.88em;">node</code> data frame. The per-observation values average back exactly to the global statistic: <code style="font-family:var(--font-mono);font-size:.88em;">mean(obs$loi) == nLoI</code>. Passing <code>fit</code> only relabels the detected blocks with the real terminal-node ids.</p>
+        </div>
+      </section>
+
+      <!-- LOCAL EXPLAINABILITY LAYER -->
+      <section id="local-layer" style="padding: 2.5rem 0; border-top: 1px solid var(--rule-soft);">
+        <span class="kicker" style="margin-bottom:.75rem; display:inline-flex;">Local explainability</span>
+        <h2 class="display-sm mt-2">Per-instance explanations, verified against the ensemble.</h2>
+        <p class="mt-4">
+          e2tree is interpretive, not predictive: it reconstructs the grouping geometry a trained ensemble induces, and its quality is fidelity to that ensemble. This layer brings the same lens down to the individual observation. All functions are backend-agnostic.
+        </p>
+
+        <div class="api-entry mt-6" id="api-explain">
+          <span class="api-fn-name">explain()</span>
+          <p>A single per-instance entry point composing the whole local layer — routing, additive attribution, ensemble neighbours, region fidelity, outcome dispersion, and on request the counterfactual and stability — into one narrative object with <code style="font-family:var(--font-mono);font-size:.88em;">print()</code> and <code style="font-family:var(--font-mono);font-size:.88em;">plot()</code> methods.</p>
+          <div class="api-sig">explain(
+  fit, ensemble, newdata,
+  reliability    = NULL,
+  k              = 5,
+  alpha          = 0.1,
+  counterfactual = FALSE,
+  stability      = FALSE,
+  B              = 100,
+  ...
+)</div>
+        </div>
+
+        <div class="api-entry" id="api-local-fns">
+          <span class="api-fn-name">The components</span>
+          <div class="table-wrap">
+          <table class="param-table">
+            <thead><tr><th>Function</th><th>What it answers</th></tr></thead>
+            <tbody>
+              <tr><td>eContribution()</td><td>Per-instance Saabas-style attribution of the reconstructed value. Exactly additive, per class for classification. A decomposition of the reconstruction, not of a prediction.</td></tr>
+              <tr><td>eNeighbors()</td><td>Case-based explanation: the nearest training cases by the ensemble's own leaf co-occurrence proximity, plus leaf prototypes. Not a generic feature-space distance.</td></tr>
+              <tr><td>eCounterfactual()</td><td>The smallest feature change moving an instance into a different region — <strong>validated against the ensemble's grouping geometry</strong>. <code>validated</code> is TRUE only when the forest actually regroups the counterfactual, unlike surrogate-only methods that merely flip the approximating tree.</td></tr>
+              <tr><td>eStability()</td><td>Confidence and stability of a local explanation via bootstrap over the ensemble's trees. Yields a per-instance confidence, a neighbour-stability score, and an interval on the reconstructed outcome.</td></tr>
+              <tr><td>eHeterogeneity()</td><td>Descriptive per-region outcome dispersion: entropy and prediction set for classification, central band and sd for regression.</td></tr>
+              <tr><td>nodeStats()</td><td>Full profile of any node: metadata, decision rule, per-predictor node-vs-rest statistics (Cohen's d, Cramér's V) and the response distribution.</td></tr>
+              <tr><td>plotNodeComparison()</td><td>Side-by-side comparison of two nodes on the predictors that separate them most.</td></tr>
+            </tbody>
+          </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANEL DATA -->
+      <section id="api-panel" style="padding: 2.5rem 0; border-top: 1px solid var(--rule-soft);">
+        <span class="kicker" style="margin-bottom:.75rem; display:inline-flex;">Panel data</span>
+        <h2 class="display-sm mt-2">Longitudinal explanations, decomposed.</h2>
+        <div class="api-entry mt-6">
+          <span class="api-fn-name">panel_e2tree()</span>
+          <p>
+            On panel (unit × time) data with high intraclass correlation, a single pooled e2tree conflates two sources of variation and the within-unit signal is crowded out. <code style="font-family:var(--font-mono);font-size:.88em;">panel_e2tree()</code> decomposes the feature representation à la Mundlak (1978) into a <strong>between</strong> component (unit means, one row per unit) and a <strong>within</strong> component (unit-demeaned deviations), then grows a separate e2tree surrogate for each. The reconstruction is additive.
+          </p>
+          <div class="api-sig">panel_e2tree(
+  formula, data, unit, time = NULL,
+  engine          = c("ranger", "randomForest"),
+  ntree           = 500,
+  target          = c("outcome", "pooled"),
+  within          = c("unit", "twoway"),
+  na.action       = c("listwise", "unit.available"),
+  min_periods     = 1L,
+  pooled_ensemble = NULL,
+  dis_args        = list(),
+  ...
+)</div>
+          <p class="small mt-4"><strong>Returns:</strong> An <code style="font-family:var(--font-mono);font-size:.88em;">e2panel</code> object with <code style="font-family:var(--font-mono);font-size:.88em;">print()</code>, <code style="font-family:var(--font-mono);font-size:.88em;">summary()</code> (fidelity plus decomposed between/within importance), <code style="font-family:var(--font-mono);font-size:.88em;">plot()</code> and <code style="font-family:var(--font-mono);font-size:.88em;">predict()</code>. Ships with the <code style="font-family:var(--font-mono);font-size:.88em;">panel_health</code> dataset — a simulated country × year panel with known between and within drivers. Regression outcomes with numeric predictors.</p>
         </div>
       </section>
 
@@ -327,7 +512,7 @@ loi_perm(tree, ensemble, data, label, B = 100)</div>
         <span class="kicker" style="margin-bottom:.75rem; display:inline-flex;">S3 methods</span>
         <h2 class="display-sm mt-2">Standard interface for e2tree objects.</h2>
 
-        <div style="overflow-x:auto; margin-top: 1.5rem;">
+        <div class="table-wrap">
           <table class="param-table">
             <thead><tr><th>Class</th><th>Methods</th></tr></thead>
             <tbody>
@@ -335,6 +520,15 @@ loi_perm(tree, ensemble, data, label, B = 100)</div>
               <tr><td>eValidation</td><td><code style="font-family:var(--font-mono);font-size:.85em;">print, summary, plot, measures, proximity</code></td></tr>
               <tr><td>loi</td><td><code style="font-family:var(--font-mono);font-size:.85em;">print, summary, plot</code></td></tr>
               <tr><td>loi_perm</td><td><code style="font-family:var(--font-mono);font-size:.85em;">print, summary, plot</code></td></tr>
+              <tr><td>localLoI</td><td><code style="font-family:var(--font-mono);font-size:.85em;">print, summary, plot</code></td></tr>
+              <tr><td>e2explanation</td><td><code style="font-family:var(--font-mono);font-size:.85em;">print, plot</code></td></tr>
+              <tr><td>e2contribution</td><td><code style="font-family:var(--font-mono);font-size:.85em;">print, plot</code></td></tr>
+              <tr><td>e2neighbors</td><td><code style="font-family:var(--font-mono);font-size:.85em;">print, plot</code></td></tr>
+              <tr><td>e2counterfactual</td><td><code style="font-family:var(--font-mono);font-size:.85em;">print, plot</code></td></tr>
+              <tr><td>e2stability</td><td><code style="font-family:var(--font-mono);font-size:.85em;">print, plot</code></td></tr>
+              <tr><td>e2heterogeneity</td><td><code style="font-family:var(--font-mono);font-size:.85em;">print, plot</code></td></tr>
+              <tr><td>e2nodeStats</td><td><code style="font-family:var(--font-mono);font-size:.85em;">print, plot</code></td></tr>
+              <tr><td>e2panel</td><td><code style="font-family:var(--font-mono);font-size:.85em;">print, summary, plot, predict</code></td></tr>
             </tbody>
           </table>
         </div>
@@ -391,7 +585,8 @@ rpart.plot::<span class="fn">rpart.plot</span>(rpart_obj)
         <h4>Package</h4>
         <ul>
           <li><a href="#install">Install</a></li>
-          <li><a href="#">Documentation</a></li>
+          <li><a href="documentation.html">Documentation</a></li>
+          <li><a href="news.html">Changelog</a></li>
           <li><a href="https://github.com/massimoaria/e2tree" target="_blank" rel="noopener">GitHub</a></li>
           <li><a href="https://cran.r-project.org/package=e2tree" target="_blank" rel="noopener">CRAN</a></li>
         </ul>

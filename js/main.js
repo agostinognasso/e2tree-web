@@ -1,6 +1,9 @@
 // e2tree — site JS
 // Navbar, fade-in, copy, lightbox, distillation visualizer, use-cases explorer
 
+const PREFERS_REDUCED_MOTION =
+  window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 (() => {
   'use strict';
 
@@ -512,7 +515,7 @@
 
   // Initial render
   renderForest();
-  frameId = requestAnimationFrame(tick);
+  if (!PREFERS_REDUCED_MOTION) frameId = requestAnimationFrame(tick);
 
   // ---- Controls ----
   const btns = document.querySelectorAll('.demo-btn[data-phase]');
@@ -528,7 +531,15 @@
         miniForest = null;
         hoveredLeaf = null;
         updateExplain(null);
-        frameId = requestAnimationFrame(tick);
+        if (PREFERS_REDUCED_MOTION) renderForest();
+        else frameId = requestAnimationFrame(tick);
+      } else if (PREFERS_REDUCED_MOTION) {
+        // Skip the distillation/reveal animations: show the final tree at once
+        phase = 2;
+        nodeReveal.fill(1);
+        hoveredLeaf = null;
+        updateExplain(null);
+        renderE2Tree();
       } else if (p === 1) {
         phase = 1;
         particles = genParticles();
@@ -593,7 +604,12 @@
     entries.forEach(e => {
       if (e.isIntersecting) {
         vizObs.unobserve(e.target);
-        setTimeout(() => { const btn = document.querySelector('.demo-btn[data-phase="1"]'); if (btn) btn.click(); }, 800);
+        if (PREFERS_REDUCED_MOTION) {
+          const btn = document.querySelector('.demo-btn[data-phase="2"]');
+          if (btn) btn.click();
+        } else {
+          setTimeout(() => { const btn = document.querySelector('.demo-btn[data-phase="1"]'); if (btn) btn.click(); }, 800);
+        }
       }
     });
   }, { threshold: 0.5 });
@@ -628,26 +644,33 @@ function initTreeExplorer(svgId, panelId, paths) {
     });
     svg.querySelectorAll('.tree-node-g').forEach(n => n.classList.remove('node-active'));
 
-    // Animate each edge in the path (staggered)
+    // Animate each edge in the path (staggered); instant when reduced motion is preferred
     d.nodes.forEach((nid, i) => {
       if (i < d.nodes.length - 1) {
         const edgeEl = svg.querySelector(
           `.tree-edge[data-edge="${nid}-${d.nodes[i + 1]}"]`
         );
         if (edgeEl) {
-          const len = edgeEl.getTotalLength();
-          edgeEl.style.transition      = 'none';
-          edgeEl.style.strokeDashoffset = len;
-          edgeEl.classList.add('edge-active');
-          setTimeout(() => {
-            edgeEl.style.transition =
-              `stroke-dashoffset 0.45s cubic-bezier(.4,0,.2,1) ${i * 0.18}s`;
-            edgeEl.style.strokeDashoffset = '0';
-          }, 20);
+          if (PREFERS_REDUCED_MOTION) {
+            edgeEl.classList.add('edge-active');
+          } else {
+            const len = edgeEl.getTotalLength();
+            edgeEl.style.transition      = 'none';
+            edgeEl.style.strokeDashoffset = len;
+            edgeEl.classList.add('edge-active');
+            setTimeout(() => {
+              edgeEl.style.transition =
+                `stroke-dashoffset 0.45s cubic-bezier(.4,0,.2,1) ${i * 0.18}s`;
+              edgeEl.style.strokeDashoffset = '0';
+            }, 20);
+          }
         }
       }
       const nodeEl = svg.querySelector(`.tree-node-g[data-node="${nid}"]`);
-      if (nodeEl) setTimeout(() => nodeEl.classList.add('node-active'), i * 180);
+      if (nodeEl) {
+        if (PREFERS_REDUCED_MOTION) nodeEl.classList.add('node-active');
+        else setTimeout(() => nodeEl.classList.add('node-active'), i * 180);
+      }
     });
 
     // Update explanation panel
